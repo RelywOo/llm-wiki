@@ -1,0 +1,134 @@
+"""Verify shared checkpoint package delivery using disposable repositories."""
+import json
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+import unittest
+
+HERE = Path(__file__).resolve().parent
+TREE = HERE / 'templates/tree'
+FILES = ['.memory/tools/checkpoint_inventory.py', '.memory/checkpoint-inventory.md', '.memory/tools/checkpoint_collect.py', '.memory/tools/checkpoint_package.py', '.memory/tools/checkpoint_txn.py',
+         '.memory/checkpoint-package.md']
+
+
+class DeliveryTest(unittest.TestCase):
+    def command(self, root, *args, expected=0):
+        if len(args) > 1 and Path(args[1]).name in ("install.py", "update.py"):
+            args = (*args, "--portable")
+        result = subprocess.run(args, cwd=root, capture_output=True, text=True)
+        self.assertEqual(result.returncode, expected, result.stdout + result.stderr)
+        return result.stdout + result.stderr
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory(prefix='wiki-package-delivery-')
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name)
+        self.command(self.root, 'git', 'init', '-q')
+        self.command(self.root, 'git', 'config', 'user.name', 'Package delivery test')
+        self.command(self.root, 'git', 'config', 'user.email', 'test@example.invalid')
+        self.command(self.root, sys.executable, str(HERE/'install.py'), 'delivery-test', '--codex')
+
+    def knowledge(self):
+        paths = list((self.root/'.memory/wiki').rglob('*.md')) + [self.root/'.memory/STATE.md']
+        return {str(p.relative_to(self.root)): p.read_bytes() for p in paths}
+
+    def assert_delivered(self):
+        for relative in FILES:
+            self.assertEqual((self.root/relative).read_bytes(), (TREE/relative).read_bytes())
+        self.assertIn('checkpoint_package.py', (self.root/'.agents/skills/wiki-checkpoint/SKILL.md').read_text())
+        self.assertIn('checkpoint_collect.py --root .', (self.root/'.agents/skills/wiki-checkpoint/SKILL.md').read_text())
+        self.assertIn('.memory/checkpoint-package.md', (self.root/'.memory/commands/wiki-checkpoint.md').read_text())
+        self.command(self.root, sys.executable, '.memory/tools/checkpoint_inventory.py', '--help')
+        self.assertFalse((self.root/'.memory/inventory.json').exists())
+        self.command(self.root, sys.executable, '.memory/tools/dual_sync.py', '--check')
+
+    def test_fresh_install_executes_checkpoint_and_retains_draft(self):
+        self.assert_delivered()
+        before = self.knowledge()
+        packet = json.loads(self.command(self.root, sys.executable, '.memory/tools/checkpoint_collect.py', '--root', '.'))
+        self.assertEqual(packet['schema'], 1)
+        self.assertNotIn('provenance', packet)
+        self.assertNotIn('instruction_aliases', packet)
+        self.assertTrue(packet['consistent'])
+        self.assertEqual(packet['checkpoint'], packet['head'])
+        self.assertEqual(self.knowledge(), before)
+        self.command(self.root, sys.executable, '.memory/tools/checkpoint_package.py', 'init',
+                     '--name', 'first', '--block', 'First checkpoint', '--summary', 'Save fixture state')
+        path = self.root/'.git/wiki-checkpoint-packages/first.json'
+        package = json.loads(path.read_text())
+        self.assertEqual(package['block'], 'First-checkpoint')
+        state = next(e for e in package['files'] if e['path']=='.memory/STATE.md')
+        state.update(action='write', content='# STATE\n\n## Now\n- Delivery fixture saved.\n')
+        path.write_text(json.dumps(package))
+        saved = path.read_bytes()
+        before = self.knowledge()
+        self.command(self.root, sys.executable, '.memory/tools/checkpoint_package.py', 'check', '--name', 'first')
+        self.assertEqual(self.knowledge(), before)
+        self.command(self.root, sys.executable, '.memory/tools/checkpoint_package.py', 'apply', '--name', 'first')
+        self.assertEqual(path.read_bytes(), saved)
+        self.command(self.root, sys.executable, '.memory/tools/structural.py', 'resume')
+        self.command(self.root, sys.executable, '.memory/tools/checkpoint_package.py', 'apply', '--name', 'first', expected=2)
+
+    def test_upgrade_delivers_missing_files_without_changing_knowledge(self):
+        # Model a committed older installation that has no package layer.
+        for relative in ['.memory/tools/checkpoint_inventory.py', '.memory/checkpoint-inventory.md', '.memory/tools/checkpoint_collect.py', '.memory/tools/checkpoint_package.py', '.memory/checkpoint-package.md']:
+            (self.root/relative).unlink()
+        (self.root/'.memory/commands/wiki-checkpoint.md').write_text(
+            '---\ndescription: Legacy checkpoint\n---\n\nUse the transaction coordinator.\n')
+        self.command(self.root, sys.executable, '.memory/tools/dual_sync.py', '--sync')
+        self.command(self.root, 'git', 'add', '-A')
+        self.command(self.root, 'git', 'commit', '-qm', 'Older checkpoint interface fixture')
+        before = self.knowledge()
+        self.command(self.root, sys.executable, str(HERE/'update.py'))
+        self.assert_delivered()
+        self.assertEqual(self.knowledge(), before)
+        head = self.command(self.root, 'git', 'rev-parse', 'HEAD')
+        self.command(self.root, sys.executable, str(HERE/'update.py'))
+        self.assertEqual(self.command(self.root, 'git', 'rev-parse', 'HEAD'), head)
+        self.assertEqual(self.knowledge(), before)
+
+    def test_collector_captures_committed_and_dirty_work_without_writing(self):
+        source = self.root/'code/example.py'
+        source.write_text('value = 1\n')
+        self.command(self.root, 'git', 'add', 'code/example.py')
+        self.command(self.root, 'git', 'commit', '-qm', 'Add session work')
+        source.write_text('value = 2\n')
+        self.command(self.root, 'git', 'add', 'code/example.py')
+        source.write_text('value = 3\n')
+        research = self.root/'.memory/research/new evidence.md'
+        research.parent.mkdir(parents=True, exist_ok=True)
+        research.write_text('Untracked supporting evidence.\n')
+        before = self.knowledge()
+        status = self.command(self.root, 'git', 'status', '--porcelain')
+        packet = json.loads(self.command(self.root, sys.executable, '.memory/tools/checkpoint_collect.py', '--root', '.'))
+        for layer in ('committed', 'staged', 'unstaged'):
+            self.assertIn('code/example.py', packet['changes'][layer])
+        self.assertIn('.memory/research/new evidence.md', packet['changes']['untracked'])
+        self.assertIn('Untracked supporting evidence.', '\n'.join(item['text'] for item in packet['items']))
+        self.assertEqual(self.knowledge(), before)
+        self.assertEqual(self.command(self.root, 'git', 'status', '--porcelain'), status)
+
+    def test_update_protects_local_collector_edits(self):
+        helper = self.root/'.memory/tools/checkpoint_collect.py'
+        helper.write_text(helper.read_text()+'\n# Local change must survive.\n')
+        saved = helper.read_bytes()
+        before = self.knowledge()
+        output = self.command(self.root, sys.executable, str(HERE/'update.py'), expected=3)
+        self.assertIn('.memory/tools/checkpoint_collect.py', output)
+        self.assertEqual(helper.read_bytes(), saved)
+        self.assertEqual(self.knowledge(), before)
+
+    def test_update_protects_local_package_documentation_edits(self):
+        doc = self.root/'.memory/checkpoint-package.md'
+        doc.write_text(doc.read_text()+'\nLocal changes must survive.\n')
+        saved = doc.read_bytes()
+        before = self.knowledge()
+        output = self.command(self.root, sys.executable, str(HERE/'update.py'), expected=3)
+        self.assertIn('.memory/checkpoint-package.md', output)
+        self.assertEqual(doc.read_bytes(), saved)
+        self.assertEqual(self.knowledge(), before)
+
+
+if __name__ == '__main__':
+    unittest.main(verbosity=2)

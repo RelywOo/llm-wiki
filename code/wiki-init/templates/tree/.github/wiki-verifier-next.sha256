@@ -1,0 +1,2 @@
+# Empty by default. To upgrade the protected verifier, first merge only the
+# approved candidate bundle SHA-256 here; change verifier/workflow files in a second PR.

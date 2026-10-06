@@ -1,0 +1,65 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Grep|Bash|PowerShell|exec",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"$(git rev-parse --show-toplevel)/.memory/tools/grep_nudge.py\"",
+            "commandWindows": "python \"<repoWin>\\.memory\\tools\\grep_nudge.py\"",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write|apply_patch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"$(git rev-parse --show-toplevel)/.memory/tools/wiki_guard.py\"",
+            "commandWindows": "python \"<repoWin>\\.memory\\tools\\wiki_guard.py\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"$(git rev-parse --show-toplevel)/.memory/tools/consult_nudge.py\"",
+            "commandWindows": "python \"<repoWin>\\.memory\\tools\\consult_nudge.py\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"$(git rev-parse --show-toplevel)/.memory/tools/precompact_archive.py\"",
+            "commandWindows": "python \"<repoWin>\\.memory\\tools\\precompact_archive.py\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python \"$(git rev-parse --show-toplevel)/.memory/tools/compact_anchor.py\"",
+            "commandWindows": "python \"<repoWin>\\.memory\\tools\\compact_anchor.py\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

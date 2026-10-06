@@ -1,0 +1,117 @@
+name: wiki-integrity
+
+"on":
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+  push:
+
+# Branch protection must require `trusted-verify`. For pull requests this workflow and
+# verifier come from the protected base, never from the candidate checkout.
+permissions:
+  contents: read
+
+jobs:
+  trusted-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          persist-credentials: true  # read-only; this job never executes candidate code
+      - name: Audit candidate with the previously trusted verifier
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          trusted="$RUNNER_TEMP/wiki-trusted-verifier"
+          mkdir -p "$trusted"
+          if [[ "$EVENT_NAME" == "pull_request_target" ]]; then
+            trusted_ref=HEAD
+            target_ref="refs/pull/$PR_NUMBER/merge"
+          else
+            trusted_ref=$(git rev-parse HEAD^ 2>/dev/null || git rev-parse HEAD)
+            target_ref=HEAD
+          fi
+          protected=(
+            .memory/tools/pre_commit_guard.py
+            .memory/tools/git_checked.py
+            .memory/tools/wiki_validation.py
+            .memory/tools/dual_sync.py
+            .memory/tools/markdown_io.py
+            .github/workflows/wiki-integrity.yml
+          )
+          verifier_digest() {
+            local ref=$1 rel digest
+            for rel in "${protected[@]}"; do
+              printf '%s\0' "$rel"
+              if git cat-file -e "$ref:$rel" 2>/dev/null; then
+                digest=$(git show "$ref:$rel" | sha256sum | cut -d' ' -f1)
+                printf '%s\n' "$digest"
+              else
+                printf 'MISSING\n'
+              fi
+            done | sha256sum | cut -d' ' -f1
+          }
+          trusted_digest=$(verifier_digest "$trusted_ref")
+          anchor_present=false
+          if git cat-file -e "$trusted_ref:.github/workflows/wiki-integrity.yml" 2>/dev/null; then
+            anchor_present=true
+          fi
+          allowed_next=$(git show "$trusted_ref:.github/wiki-verifier-next.sha256" 2>/dev/null \
+            | grep -Eom1 '^[0-9a-f]{64}$' || true)
+          for rel in pre_commit_guard.py git_checked.py wiki_validation.py dual_sync.py markdown_io.py; do
+            src=".memory/tools/$rel"
+            if git cat-file -e "$trusted_ref:$src" 2>/dev/null; then
+              git show "$trusted_ref:$src" > "$trusted/$rel"
+            fi
+          done
+          test -s "$trusted/pre_commit_guard.py"
+          if [[ "$EVENT_NAME" == "pull_request_target" ]]; then
+            git fetch --no-tags origin "$target_ref"
+            git checkout --detach FETCH_HEAD
+          fi
+          candidate_digest=$(verifier_digest HEAD)
+          if [[ "$anchor_present" == true && "$candidate_digest" != "$trusted_digest" \
+                && "$candidate_digest" != "$allowed_next" ]]; then
+            echo "Verifier trust-continuity REFUSED." >&2
+            echo "candidate bundle: $candidate_digest" >&2
+            echo "First merge only that digest into .github/wiki-verifier-next.sha256;" >&2
+            echo "then change verifier/workflow files in a second reviewed PR." >&2
+            exit 2
+          fi
+          python -I - "$trusted" "$PWD" <<'PY'
+          import os, runpy, sys
+          trusted, repository = sys.argv[1:]
+          sys.path.insert(0, trusted)
+          os.chdir(repository)
+          runpy.run_path(os.path.join(trusted, "pre_commit_guard.py"), run_name="__main__")
+          PY
+
+  candidate-regressions:
+    if: github.event_name == 'push'
+    needs: trusted-verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install and verify isolated HEAD-pinned hook
+        run: |
+          python .memory/tools/install_hooks.py
+          python .memory/tools/install_hooks.py --check
+          git hook run pre-commit
+      - name: Run adversarial integrity regressions
+        run: |
+          export PYTHONDONTWRITEBYTECODE=1
+          python .memory/tools/install_hooks.py --selfcheck
+          python .memory/tools/pre_commit_guard.py --selfcheck
+          python .memory/tools/wiki_guard.py --selfcheck
+          python .memory/tools/git_checked.py --selfcheck
+          python .memory/tools/wiki_validation.py --selfcheck
+          python .memory/tools/checkpoint_txn.py selfcheck
+          python .memory/tools/structural.py selfcheck
+          python .memory/tools/structural.py doctor --portable
+          python .memory/tools/structural.py guard

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Wiki Resume"
+  short_description: "Reload project and session context"
+  default_prompt: "Use $wiki-resume to restore project context."

@@ -1,0 +1,4 @@
+#!/bin/sh
+# WIKI_MEMORY_TRACKED_BOOTSTRAP_ONLY
+printf '%s\n' 'wiki pre-commit unavailable: run python .memory/tools/install_hooks.py' >&2
+exit 2

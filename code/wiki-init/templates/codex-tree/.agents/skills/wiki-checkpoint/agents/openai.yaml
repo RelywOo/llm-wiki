@@ -1,0 +1,4 @@
+interface:
+  display_name: "Wiki Checkpoint"
+  short_description: "Save session state and checkpoint"
+  default_prompt: "Use $wiki-checkpoint to capture this session."

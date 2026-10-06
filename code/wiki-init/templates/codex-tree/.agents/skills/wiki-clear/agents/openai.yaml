@@ -1,0 +1,4 @@
+interface:
+  display_name: "Wiki Clear"
+  short_description: "Wipe session STATE to idle"
+  default_prompt: "Use $wiki-clear to wipe volatile session state to idle."
