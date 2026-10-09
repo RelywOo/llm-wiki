@@ -97,16 +97,72 @@ def reduce_events(events):
                 'source requires path and exact quote')
         require(not any(x in source['path'] for x in ('`','\n','\r')), 'invalid source path')
         op=event['op']
-        require(op in {'create','update'}, 'op must be create or update')
+        require(op in {'create','update','link','unlink'}, 'op must be create, update, link or unlink')
         require((key not in tasks) if op=='create' else (key in tasks),
                 f'{key}: create requires a new ID; update requires an existing ID')
+        if op in {'link','unlink'}:
+            change=event['values']
+            require(isinstance(change,dict) and set(change)=={'target','kind'}, 'link/unlink requires target and kind')
+            require(change['kind'] in {'hard','soft'}, 'dependency kind must be hard or soft')
+            require(isinstance(change['target'],str) and ID.fullmatch(change['target']), 'invalid dependency target')
+            task=tasks[key]
+            field='dependencies' if change['kind']=='hard' else 'advisory_dependencies'
+            links=task['values'][field] if field=='dependencies' else task[field]
+            require(links is not None, 'resolve unknown dependencies before changing an edge')
+            target=change['target']
+            require((target not in links) if op=='link' else (target in links), 'edge already present or absent')
+            if op=='link': links.append(target)
+            else: links.remove(target)
+            links.sort()
+            edge_key=change['kind']+':'+target
+            task['edge_events'][edge_key]={'seq':number,'source':source,'reason':event['reason'],'op':op}
+            task['field_events'][field]={'seq':number,'source':source,'reason':event['reason']}
+            continue
         validate_values(event['values'], op=='create')
-        if op=='create': tasks[key]={'id':key,'values':{},'field_events':{}}
+        if op=='update' and 'dependencies' in event['values']:
+            require(tasks[key]['values']['dependencies'] is None,
+                    'use link/unlink with a specific pair; replacing known dependencies is forbidden')
+        if op=='create': tasks[key]={'id':key,'values':{},'field_events':{},'advisory_dependencies':[],'edge_events':{}}
         task=tasks[key]
-        task['values'].update(event['values'])
+        task['values'].update(json.loads(json.dumps(event['values'])))
         for field in event['values']:
             task['field_events'][field]={'seq':number,'source':source,'reason':event['reason']}
+        if 'dependencies' in event['values'] and event['values']['dependencies'] is not None:
+            for target in event['values']['dependencies']:
+                task['edge_events']['hard:'+target]={'seq':number,'source':source,'reason':event['reason'],'op':'link'}
+    validate_graph(tasks)
     return tasks
+
+
+def validate_graph(tasks):
+    for key,task in tasks.items():
+        for target in (task['values']['dependencies'] or []) + task['advisory_dependencies']:
+            require(target in tasks, f'{key}: unknown dependency target {target}')
+            require(target != key, f'{key}: self dependency')
+    # Iterative topological check: never replace the stored graph with its transitive reduction.
+    pending={k:set(t['values']['dependencies'] or []) for k,t in tasks.items()}
+    reverse={k:[] for k in tasks}
+    for key,deps in pending.items():
+        for target in deps: reverse[target].append(key)
+    ready=[k for k,deps in pending.items() if not deps]
+    count=0
+    while ready:
+        key=ready.pop();count+=1
+        for child in reverse[key]:
+            pending[child].remove(key)
+            if not pending[child]:ready.append(child)
+    require(count==len(tasks),'hard dependency cycle')
+
+
+def readiness(task, tasks):
+    values=task['values']
+    if values['status'] is None: return {'state':'unknown','blocked_by':[]}
+    if values['status']!='open': return {'state':'not_open','blocked_by':[]}
+    if values['dependencies'] is None: return {'state':'unknown','blocked_by':[]}
+    blocked=[k for k in values['dependencies'] if tasks[k]['values']['status'] not in {'done',None}]
+    unknown=[k for k in values['dependencies'] if tasks[k]['values']['status'] is None]
+    return {'state':'blocked' if blocked else ('unknown' if unknown else 'ready'),
+            'blocked_by':sorted(blocked),'unknown_dependencies':sorted(unknown)}
 
 
 def validate_transition(before, after, source_exists=None):
@@ -135,7 +191,9 @@ def view(text):
     for task in tasks.values():
         task['unknown_fields']=sorted(k for k,v in task['values'].items() if v is None)
         task['complete']=not task['unknown_fields']
+        task['readiness']=readiness(task,tasks)
     return {'schema':1,'revision':len(events),'digest':hashlib.sha256(text.encode()).hexdigest(),
+            'ready_now':sorted(k for k,t in tasks.items() if t['readiness']['state']=='ready'),
             'tracked':bool(text),'complete':bool(text) and all(t['complete'] for t in tasks.values()),'tasks':tasks}
 
 
@@ -149,10 +207,12 @@ def apply(root, event):
     temporary=None
     try:
         old=load(root)
-        events=parse(old)+[event]
+        additions=event if isinstance(event,list) else [event]
+        require(bool(additions),'empty event batch')
+        events=parse(old)+additions
         reduce_events(events)
-        source_path(root,event['source']['path'])
-        candidate=(old or HEADER)+render_event(event)
+        for added in additions: source_path(root,added['source']['path'])
+        candidate=(old or HEADER)+''.join(render_event(added) for added in additions)
         with tempfile.NamedTemporaryFile(mode='w',encoding='utf-8',dir=wiki,prefix='.tasks-',delete=False) as f:
             temporary=Path(f.name)
             f.write(candidate);f.flush();os.fsync(f.fileno())
@@ -161,7 +221,7 @@ def apply(root, event):
             directory=os.open(wiki,os.O_RDONLY)
             try: os.fsync(directory)
             finally: os.close(directory)
-        return {'revision':len(events),'id':event['id']}
+        return {'revision':len(events),'ids':[e['id'] for e in additions]}
     finally:
         if temporary is not None: temporary.unlink(missing_ok=True)
         lock.unlink()

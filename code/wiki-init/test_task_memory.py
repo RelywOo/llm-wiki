@@ -112,5 +112,65 @@ class TaskMemoryTest(unittest.TestCase):
         self.assertNotEqual(result.returncode,0)
         self.assertIn('append-only',result.stdout+result.stderr)
 
+    def test_bulk_dependency_replacement_cannot_silently_drop_direct_edge(self):
+        self.apply(self.event(1,task='T24'))
+        middle=self.event(2,task='T14');middle['values']['dependencies']=['T24']
+        self.apply(middle)
+        launch=self.event(3,task='T18');launch['values']['dependencies']=['T14','T24']
+        self.apply(launch)
+        result=self.apply(self.event(4,task='T18',op='update',values={'dependencies':['T14']}),ok=False)
+        self.assertNotEqual(result.returncode,0)
+        self.assertIn('link',result.stderr)
+
+    def test_remove_one_edge_preserves_other_direct_and_indirect_constraints(self):
+        events=[]
+        for seq,key in enumerate(('T24','T23','T14','T18'),1):
+            e=self.event(seq,task=key)
+            if key=='T14': e['values'].update(status='done',dependencies=['T24'])
+            if key=='T18': e['values']['dependencies']=['T14','T23','T24']
+            events.append(e)
+        self.apply(events)
+        self.apply(self.event(5,task='T18',op='unlink',values={'target':'T23','kind':'hard'}))
+        view=json.loads(self.cli('tasks','show').stdout)
+        launch=view['tasks']['T18']
+        self.assertEqual(launch['values']['dependencies'],['T14','T24'])
+        self.assertEqual(launch['readiness']['blocked_by'],['T24'])
+        self.assertNotIn('T18',view['ready_now'])
+        self.apply(self.event(6,task='T24',op='update',values={'status':'done'}))
+        self.assertIn('T18',json.loads(self.cli('tasks','show').stdout)['ready_now'])
+        self.apply(self.event(7,task='T24',op='update',values={'status':'open'}))
+        self.assertNotIn('T18',json.loads(self.cli('tasks','show').stdout)['ready_now'])
+
+    def test_new_advisory_link_does_not_block_but_hard_link_does(self):
+        self.apply([self.event(1,task='BUILD'),self.event(2,task='REVIEW')])
+        self.apply(self.event(3,task='BUILD',op='link',values={'target':'REVIEW','kind':'soft'}))
+        self.assertIn('BUILD',json.loads(self.cli('tasks','show').stdout)['ready_now'])
+        self.apply(self.event(4,task='BUILD',op='link',values={'target':'REVIEW','kind':'hard'}))
+        self.assertNotIn('BUILD',json.loads(self.cli('tasks','show').stdout)['ready_now'])
+
+    def test_cycles_unknown_targets_and_missing_removals_are_atomic_failures(self):
+        self.apply([self.event(1,task='A'),self.event(2,task='B')])
+        self.apply(self.event(3,task='A',op='link',values={'target':'B','kind':'hard'}))
+        before=(self.root/'.memory/wiki/task-ledger.md').read_bytes()
+        for key,target,op in [('B','A','link'),('A','MISSING','link'),('B','A','unlink'),('A','A','link')]:
+            with self.subTest(key=key,target=target,op=op):
+                self.assertNotEqual(self.apply(self.event(4,task=key,op=op,values={'target':target,'kind':'hard'}),ok=False).returncode,0)
+                self.assertEqual((self.root/'.memory/wiki/task-ledger.md').read_bytes(),before)
+
+    def test_readiness_status_truth_table_includes_unknown_and_closed(self):
+        self.apply([self.event(1,task='A'),self.event(2,task='B')])
+        self.apply(self.event(3,task='A',op='link',values={'target':'B','kind':'hard'}))
+        cases=[('open','open','blocked'),('open','done','ready'),('open','cancelled','blocked'),
+               ('open',None,'unknown'),('done','done','not_open'),('in_progress','done','not_open'),
+               ('blocked','done','not_open'),(None,'done','unknown')]
+        seq=4
+        for own,dependency,expected in cases:
+            with self.subTest(own=own,dependency=dependency):
+                self.apply([self.event(seq,task='A',op='update',values={'status':own}),
+                            self.event(seq+1,task='B',op='update',values={'status':dependency})])
+                seq+=2
+                view=json.loads(self.cli('tasks','show','A').stdout)
+                self.assertEqual(view['tasks']['A']['readiness']['state'],expected)
+
 
 if __name__=='__main__': unittest.main()

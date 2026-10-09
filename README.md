@@ -72,6 +72,27 @@ python .memory/tools/structural.py doctor
 
 Run these inside the installed target project. Use `structural.py help` for the command list. Installation supplies project instructions, including an English default and a `code/` layout convention; review them for your project.
 
+## Reliable decisions and task memory
+
+Before applying a mutable rule, resolve its full decision lineage:
+
+```sh
+python .memory/tools/structural.py decision 0008
+```
+
+Tracked tasks can use a canonical, sourced event ledger. It preserves required fields and
+explicit unknowns, keeps direct dependencies, and computes readiness:
+
+```sh
+python .memory/tools/structural.py tasks apply event.json
+python .memory/tools/structural.py tasks show
+python .memory/tools/structural.py tasks check --complete
+```
+
+Legacy prose is preserved and requires a source-reviewed migration before it becomes a
+structured task record. See [memory reliability](docs/memory-reliability.md) for the event
+contract, regression coverage, tradeoffs, and measured limitations.
+
 ## Update an installed project
 
 ```sh

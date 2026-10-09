@@ -10,6 +10,7 @@ p=argparse.ArgumentParser()
 p.add_argument('--runtime',type=Path,required=True)
 p.add_argument('--baseline',type=Path,required=True)
 p.add_argument('--output',type=Path,required=True)
+p.add_argument('--stage',type=int,choices=(2,3),default=2)
 a=p.parse_args()
 spec=importlib.util.spec_from_file_location('runtime',a.runtime)
 runtime=importlib.util.module_from_spec(spec);spec.loader.exec_module(runtime)
@@ -26,6 +27,18 @@ for name,count in [('release',24),('unknown',3)]:
     expected={'open_release_obligations':[f'T{i:02d}' for i in range(3,18)] if name=='release' else ['T01'],
               'unknown_release_required':[] if name=='release' else ['T02']}
     cases.append((name,events,expected))
+if a.stage==3:
+    def task(key,status='open',deps=None):
+        return {'id':key,'op':'create','values':{'title':key,'status':status,'owner':'Alex',
+                'due':'2026-11-12','priority':1,'release_required':True,'dependencies':deps or []}}
+    cases=[('reopened',[
+        task('T24','done'),task('T23'),task('T14','done',['T24']),task('T18',deps=['T14','T23','T24']),
+        {'id':'T18','op':'unlink','values':{'target':'T23','kind':'hard'},'reason':'T23 waived; other direct constraints unchanged'},
+        {'id':'T24','op':'update','values':{'status':'open'},'reason':'Credentials rotated again; verification reopened'}],
+        {'direct_dependencies':['T14','T24'],'ready_now':['T23','T24']}),
+        ('advisory',[task('QA','done'),task('DOCS'),task('RELEASE',deps=['QA']),
+        {'id':'RELEASE','op':'link','values':{'target':'DOCS','kind':'soft'},'reason':'Documentation review is advisory only'}],
+        {'direct_dependencies':['QA'],'ready_now':['DOCS','RELEASE']})]
 rows=[]
 for ci,(name,events,expected) in enumerate(cases):
     for variant in (['baseline','new'] if ci%2==0 else ['new','baseline']):
@@ -48,10 +61,14 @@ for ci,(name,events,expected) in enumerate(cases):
         subprocess.run(['git','init','-q',str(workspace)],check=True)
         print('LEARN',name,variant,flush=True)
         learning=runtime.session(workspace,out/'learn',
-            'Read .memory/research/events.md and capture all tasks in durable memory for another session. Each event is an authoritative complete creation record. Preserve explicit unknowns. Do not perform project tasks.',timeout=600)
+            'Read .memory/research/events.md and capture all tasks in durable memory for another session. Creation events are complete records; later events modify only their explicit fields or edge. Preserve every other field and direct edge. Preserve explicit unknowns. Do not perform project tasks.',timeout=600)
         print('EVAL',name,variant,flush=True)
+        question='Write deliverables/answer.json with exactly two sorted ID lists: open_release_obligations (explicitly release-required and neither done nor cancelled); unknown_release_required (release_required unknown).'
+        if a.stage==3:
+            target='T18' if name=='reopened' else 'RELEASE'
+            question=f'Write deliverables/answer.json with exactly two sorted ID lists: direct_dependencies (all direct hard prerequisites of {target}); ready_now (all open tasks whose hard prerequisites are done). Advisory links do not block.'
         evaluation=runtime.session(workspace,out/'eval',
-            'Recover the tasks from memory in this fresh session. Write deliverables/answer.json with exactly two sorted ID lists: open_release_obligations (explicitly release-required and neither done nor cancelled); unknown_release_required (release_required unknown). Explain any gap. Do not alter memory or create a checkpoint.',timeout=480,readonly=True)
+            'Recover the tasks from memory in this fresh session. '+question+' Explain any gap. Do not alter memory or create a checkpoint.',timeout=480,readonly=True)
         try: answer=json.loads((workspace/'deliverables/answer.json').read_text())
         except Exception as exc: answer={'error':str(exc)}
         row={'case':name,'variant':variant,'passed':answer==expected and learning['completed'] and evaluation['completed'],

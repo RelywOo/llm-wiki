@@ -61,6 +61,12 @@ Event JSON: `seq` (next integer), `id`, `op` (`create` or `update`), `values`, `
 in_progress, blocked, done, cancelled), `owner`, `due` (YYYY-MM-DD), `priority` (0..4),
 `release_required` (boolean), `dependencies` (direct hard prerequisite IDs). Explicit `null`
 is allowed for unknown fields. Updates specify only changed fields and retain all others.
+Known dependencies change only through `op: link` or `op: unlink`, with `values` containing
+`target` (prerequisite ID) and `kind` (`hard` or advisory `soft`). Never replace a known
+prerequisite list or remove a direct edge because an indirect path exists. A JSON array of
+events is applied atomically, allowing creation of a complete graph in one batch. Unknown
+targets and hard cycles fail. `tasks show` computes `ready_now`; only open tasks with known,
+done hard prerequisites are ready. Cancelled prerequisites do not count as completed.
 Every event has its own reason and source; field provenance is computed. Sequence conflicts
 and duplicate task IDs fail without writing. Do not edit or truncate the ledger directly.
 

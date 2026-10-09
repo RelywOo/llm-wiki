@@ -87,3 +87,32 @@ were rejected because a partial update could accidentally erase an unrelated fie
 selected event representation preserves unchanged fields without duplicated current truth.
 
 Development checks: **8/8** task regressions; **14/14** combined regressions. The 24-task fixture retains **15/15** open release obligations after navigation compaction. Four paired capture/recovery experiments (eight fresh model sessions) pass: baseline **2/2**, new **2/2**. Both answer lists and explicit unknowns are checked. This demonstrates the workflow, not a statistically established accuracy advantage. The full installed distribution check passes.
+
+## 3. Direct edges are explicit constraints
+
+Known hard prerequisite lists cannot be overwritten by an `update`. Use a sourced
+`link` or `unlink` event for one `(dependent, prerequisite, kind)` pair. Removing an
+absent edge is an error, not a successful no-op. Direct edges are never removed by
+transitive reduction. `soft` edges are advisory and kept separately from hard constraints.
+
+```json
+{"seq": 5, "id": "T18", "op": "unlink", "values": {"target": "T23", "kind": "hard"}, "reason": "T23 explicitly waived; all other constraints remain", "source": {"path": ".memory/research/events.md", "quote": "T23 is waived for launch."}}
+```
+
+A JSON array is one atomic batch, useful for creating a graph with forward references.
+All targets must exist in the resulting graph. Hard cycles and self links are rejected;
+soft cycles do not impose ordering. Unknown hard dependencies must be explicitly resolved
+before individual edge edits. No guessed empty list is substituted for unknowns.
+
+`tasks show` computes readiness. Only `open` tasks whose known hard prerequisites are all
+`done` are ready. Unknown status/dependencies remain unknown. A cancelled prerequisite is
+not a completed prerequisite; waive its edge explicitly if it no longer blocks. An agent
+can still misinterpret a raw source while capturing it; the tool preserves the recorded
+constraints and makes later changes explicit, rather than claiming natural-language truth.
+
+Development regression: unrestricted replacement previously accepted dropping T24 while
+keeping T14. The new command rejects it. Removing only T23 keeps T14 and T24; reopening
+T24 blocks T18 even when T14 remains done. New tests cover advisory versus hard links,
+atomic failures, unknown targets, cycles, and eight readiness/status combinations.
+
+Validation: **13/13** task tests (**19/19** combined); four capture/recovery experiments, **8** fresh model sessions. Both baseline and new workflow pass **2/2** original/new scenarios. Deterministic edge and readiness checks establish the new guarantees; this model sample does not establish superiority.
