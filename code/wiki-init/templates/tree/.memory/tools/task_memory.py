@@ -197,6 +197,39 @@ def view(text):
             'tracked':bool(text),'complete':bool(text) and all(t['complete'] for t in tasks.values()),'tasks':tasks}
 
 
+def current(text, selected=None, revision=None):
+    events=parse(text)
+    if revision is not None:
+        require(type(revision) is int and 0 <= revision <= len(events), 'revision outside ledger')
+        events=events[:revision]
+        text=HEADER+''.join(render_event(e) for e in events)
+    full=view(text)
+    if selected is not None:
+        require(selected in full['tasks'], 'unknown task ID')
+    tasks={}
+    references=set()
+    for key,task in full['tasks'].items():
+        if selected is not None and key!=selected: continue
+        fields={k:v['seq'] for k,v in task['field_events'].items()}
+        edges={k:{'seq':v['seq'],'op':v['op']} for k,v in task['edge_events'].items()}
+        references.update(fields.values())
+        references.update(v['seq'] for v in edges.values())
+        tasks[key]={'id':key,**task['values'],'advisory_dependencies':task['advisory_dependencies'],
+                    'field_events':fields,'edge_events':edges,'unknown_fields':task['unknown_fields'],
+                    'readiness':task['readiness']}
+    return {'schema':1,'mode':'historical' if revision is not None else 'current',
+            'selection':selected,'revision':full['revision'],'digest':full['digest'],
+            'tracked':full['tracked'],'complete':full['tracked'] and all(not t['unknown_fields'] for t in tasks.values()),
+            'ready_now':[k for k in full['ready_now'] if k in tasks],
+            'open_release_obligations':sorted(k for k,t in tasks.items() if t['release_required'] is True
+                                             and t['status'] in {'open','in_progress','blocked'}),
+            'uncertain_obligations':sorted(k for k,t in tasks.items() if t['release_required'] is not False
+                                          and t['status'] not in {'done','cancelled'}
+                                          and (t['release_required'] is None or t['status'] is None)),
+            'tasks':tasks,
+            'sources':{str(n):{'source':events[n-1]['source'],'reason':events[n-1]['reason']} for n in sorted(references)}}
+
+
 def apply(root, event):
     wiki=root/'.memory/wiki'
     require(wiki.is_dir() and not wiki.is_symlink(), 'wiki directory missing or symlinked')
@@ -228,10 +261,36 @@ def apply(root, event):
 
 
 def main(root, args):
-    usage='tasks apply EVENT.json | show [ID] | check [--complete]'
+    usage='tasks apply EVENT.json | current [ID] | show [ID] | at REV [ID] | history [ID] | verify SNAPSHOT.json | check [--complete]'
     require(bool(args),usage)
     if args[0]=='apply' and len(args)==2:
         print(json.dumps(apply(root,json.loads(Path(args[1]).read_text(encoding='utf-8')))))
+        return
+    if args[0] in {'current','at','history','verify'}:
+        text=load(root)
+        for event in parse(text): source_path(root,event['source']['path'])
+        if args[0]=='current':
+            require(len(args)<=2,usage)
+            output=current(text,args[1] if len(args)==2 else None)
+        elif args[0]=='at':
+            require(len(args) in (2,3),usage)
+            output=current(text,args[2] if len(args)==3 else None,int(args[1]))
+        elif args[0]=='history':
+            require(len(args)<=2,usage)
+            events=parse(text)
+            if len(args)==2:
+                require(any(e['id']==args[1] for e in events),'unknown task ID')
+                events=[e for e in events if e['id']==args[1]]
+            output={'mode':'history','events':events}
+        else:
+            require(len(args)==2,usage)
+            snapshot=json.loads(Path(args[1]).read_text(encoding='utf-8'))
+            require(isinstance(snapshot,dict),'snapshot must be an object')
+            require(snapshot.get('mode')=='current','only a current view can be verified for publication')
+            require(json.dumps(snapshot,sort_keys=True)==json.dumps(current(text,snapshot.get('selection')),sort_keys=True),
+                    'snapshot is stale or altered; regenerate with tasks current')
+            output={'verified':True,'revision':snapshot['revision'],'digest':snapshot['digest']}
+        print(json.dumps(output,ensure_ascii=False,indent=2))
         return
     require(args[0] in {'show','check'} and len(args)<=2,usage)
     text=load(root)

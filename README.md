@@ -85,7 +85,7 @@ explicit unknowns, keeps direct dependencies, and computes readiness:
 
 ```sh
 python .memory/tools/structural.py tasks apply event.json
-python .memory/tools/structural.py tasks show
+python .memory/tools/structural.py tasks current
 python .memory/tools/structural.py tasks check --complete
 ```
 

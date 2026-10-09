@@ -10,7 +10,7 @@ p=argparse.ArgumentParser()
 p.add_argument('--runtime',type=Path,required=True)
 p.add_argument('--baseline',type=Path,required=True)
 p.add_argument('--output',type=Path,required=True)
-p.add_argument('--stage',type=int,choices=(2,3),default=2)
+p.add_argument('--stage',type=int,choices=(2,3,4),default=2)
 a=p.parse_args()
 spec=importlib.util.spec_from_file_location('runtime',a.runtime)
 runtime=importlib.util.module_from_spec(spec);spec.loader.exec_module(runtime)
@@ -39,6 +39,21 @@ if a.stage==3:
         ('advisory',[task('QA','done'),task('DOCS'),task('RELEASE',deps=['QA']),
         {'id':'RELEASE','op':'link','values':{'target':'DOCS','kind':'soft'},'reason':'Documentation review is advisory only'}],
         {'direct_dependencies':['QA'],'ready_now':['DOCS','RELEASE']})]
+if a.stage==4:
+    def initial(required=True):
+        return {'id':'T01','op':'create','values':{'title':'Rollout','status':'open','owner':'Alex',
+                'due':'2026-11-12','priority':1,'release_required':required,'dependencies':[]}}
+    cases=[('amended', [initial(),
+        {'id':'T01','op':'update','values':{'owner':'Mei'},'reason':'Ownership reassigned'},
+        {'id':'T01','op':'update','values':{'due':'2026-12-01'},'reason':'Migration tests need time'},
+        {'id':'T01','op':'update','values':{'owner':'Nora'},'reason':'Mei unavailable'},
+        {'id':'T01','op':'update','values':{'status':'done'},'reason':'Initial signoff'},
+        {'id':'T01','op':'update','values':{'status':'open'},'reason':'Signoff revoked'}],
+        {'current_owner':'Nora','current_due':'2026-12-01','initial_owner':'Alex','release_required':True}),
+        ('unknown_due',[initial(False),
+        {'id':'T01','op':'update','values':{'owner':'Irina','due':None},'reason':'Ownership changes; old date withdrawn, replacement unknown'},
+        {'id':'T01','op':'update','values':{'priority':0,'status':'in_progress'},'reason':'Work starts urgently'}],
+        {'current_owner':'Irina','current_due':None,'initial_owner':'Alex','release_required':False})]
 rows=[]
 for ci,(name,events,expected) in enumerate(cases):
     for variant in (['baseline','new'] if ci%2==0 else ['new','baseline']):
@@ -67,6 +82,8 @@ for ci,(name,events,expected) in enumerate(cases):
         if a.stage==3:
             target='T18' if name=='reopened' else 'RELEASE'
             question=f'Write deliverables/answer.json with exactly two sorted ID lists: direct_dependencies (all direct hard prerequisites of {target}); ready_now (all open tasks whose hard prerequisites are done). Advisory links do not block.'
+        if a.stage==4:
+            question='Write deliverables/answer.json with exactly four fields for T01: current_owner, current_due (null if unknown), initial_owner (at original creation), release_required (current boolean or null). Distinguish current state from history.'
         evaluation=runtime.session(workspace,out/'eval',
             'Recover the tasks from memory in this fresh session. '+question+' Explain any gap. Do not alter memory or create a checkpoint.',timeout=480,readonly=True)
         try: answer=json.loads((workspace/'deliverables/answer.json').read_text())

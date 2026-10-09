@@ -62,6 +62,11 @@ Steps:
    Writing starts after the inventory and target reads. Both paths preserve source
    references, uncertainty and explicit dropped-item accounting for the final report.
 
+   TASK INVENTORY — capture sourced task creates, field changes and explicit edge changes
+   with `structural.py tasks apply` before initializing the package. Use `tasks current`
+   for the current view; retain unknowns and report them. Keep the already-written ledger
+   in the package rather than maintaining another task table. Prose/STATE link to the ledger.
+
    REUSABLE PACKAGE — after the inventory and target Reads, read
    `.memory/checkpoint-package.md` and run:
    `python .memory/tools/checkpoint_package.py init --name session-<N> --block "<block>" --summary "<summary>" --allow <paths...>`

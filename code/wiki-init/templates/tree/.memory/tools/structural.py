@@ -2847,6 +2847,23 @@ def resume_pack():
         print("Refusing to compute active decisions from an untrusted wiki; run `structural.py guard`.")
         return
 
+    if (WIKI / "task-ledger.md").exists():
+        import task_memory
+        print("\n== TASK MEMORY — computed from canonical events ==")
+        try:
+            task_text = task_memory.load(root)
+            for event in task_memory.parse(task_text):
+                task_memory.source_path(root, event["source"]["path"])
+            task_view = task_memory.current(task_text)
+            print(f"revision {task_view['revision']}; tasks {len(task_view['tasks'])}; "
+                  f"ready {len(task_view['ready_now'])}; open release obligations "
+                  f"{len(task_view['open_release_obligations'])}; "
+                  f"uncertain obligations {len(task_view['uncertain_obligations'])}; "
+                  f"complete={task_view['complete']}")
+            print("Read tasks current [ID] for values and sources; STATE idle does not cancel obligations.")
+        except (ValueError, OSError, TypeError, KeyError) as exc:
+            print(f"TASK MEMORY UNRESOLVED: {exc}; do not infer an empty task list.")
+
     state_path = root / ".memory" / "STATE.md"
     state = read_markdown(state_path) if state_path.exists() else ""
 

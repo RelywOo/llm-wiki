@@ -172,5 +172,77 @@ class TaskMemoryTest(unittest.TestCase):
                 view=json.loads(self.cli('tasks','show','A').stdout)
                 self.assertEqual(view['tasks']['A']['readiness']['state'],expected)
 
+    def test_current_snapshot_has_watermark_and_rejects_stale_publication(self):
+        self.apply(self.event())
+        current=self.cli('tasks','current').stdout
+        (self.root/'snapshot.json').write_text(current)
+        self.cli('tasks','verify','snapshot.json')
+        self.apply(self.event(2,op='update',values={'owner':'Mei'}))
+        self.assertNotEqual(self.cli('tasks','verify','snapshot.json',ok=False).returncode,0)
+        new=json.loads(self.cli('tasks','current').stdout)
+        self.assertEqual(new['revision'],2)
+        self.assertEqual(new['tasks']['T01']['owner'],'Mei')
+
+    def test_current_and_history_agree_without_replaying_prose(self):
+        self.apply(self.event())
+        self.apply(self.event(2,op='update',values={'owner':'Mei','due':'2026-12-01'}))
+        before=json.loads(self.cli('tasks','at','1','T01').stdout)
+        now=json.loads(self.cli('tasks','current','T01').stdout)
+        detailed=json.loads(self.cli('tasks','show','T01').stdout)
+        self.assertEqual(before['mode'],'historical')
+        self.assertEqual(before['tasks']['T01']['owner'],'Alex')
+        self.assertEqual(now['tasks']['T01']['owner'],'Mei')
+        for key,value in detailed['tasks']['T01']['values'].items():
+            self.assertEqual(now['tasks']['T01'][key],value)
+        self.assertEqual(len(json.loads(self.cli('tasks','history','T01').stdout)['events']),2)
+        self.assertNotEqual(self.cli('tasks','at','99',ok=False).returncode,0)
+        (self.root/'old.json').write_text(json.dumps(before))
+        self.assertNotEqual(self.cli('tasks','verify','old.json',ok=False).returncode,0)
+
+    def test_current_view_size_does_not_grow_with_replaced_field_history(self):
+        events=[self.event()]
+        for seq in range(2,42):
+            events.append(self.event(seq,op='update',values={'owner':f'Owner-{seq}'}))
+        self.apply(events)
+        compact=self.cli('tasks','current').stdout
+        history=self.cli('tasks','history').stdout
+        self.assertLess(len(compact),len(history)//3)
+        self.assertEqual(json.loads(compact)['tasks']['T01']['owner'],'Owner-41')
+
+    def test_snapshot_verification_rejects_type_coercion_and_invented_values(self):
+        self.apply(self.event())
+        snapshot=json.loads(self.cli('tasks','current').stdout)
+        snapshot['tasks']['T01']['release_required']=1
+        (self.root/'snapshot.json').write_text(json.dumps(snapshot))
+        self.assertNotEqual(self.cli('tasks','verify','snapshot.json',ok=False).returncode,0)
+
+    def test_unknown_status_is_uncertain_not_an_open_obligation(self):
+        event=self.event();event['values']['status']=None
+        self.apply(event)
+        view=json.loads(self.cli('tasks','current').stdout)
+        self.assertEqual(view['open_release_obligations'],[])
+        self.assertEqual(view['uncertain_obligations'],['T01'])
+
+    def test_installed_resume_and_update_preserve_task_knowledge(self):
+        self.root=self.root/'installed';self.root.mkdir()
+        def run(*args):
+            result=subprocess.run(args,cwd=self.root,text=True,capture_output=True)
+            self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+            return result.stdout
+        run('git','init','-q');run('git','config','user.name','Test')
+        run('git','config','user.email','test@example.invalid')
+        run(sys.executable,str(HERE/'install.py'),'task-test','--codex','--portable')
+        (self.root/'.memory/research').mkdir(exist_ok=True)
+        (self.root/'.memory/research/events.md').write_text('E001: Release task is required.\n')
+        self.apply(self.event())
+        output=self.cli('resume').stdout
+        self.assertIn('open release obligations 1',output)
+        self.assertIn('STATE idle does not cancel obligations',output)
+        run('git','add','.');run('git','commit','-qm','Capture task')
+        ledger=self.root/'.memory/wiki/task-ledger.md';before=ledger.read_bytes()
+        run(sys.executable,str(HERE/'update.py'),'--portable')
+        self.assertEqual(before,ledger.read_bytes())
+        self.assertEqual(json.loads(self.cli('tasks','current').stdout)['open_release_obligations'],['T01'])
+
 
 if __name__=='__main__': unittest.main()

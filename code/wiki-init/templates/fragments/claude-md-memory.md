@@ -50,7 +50,12 @@ Most used: `search "<terms>"` for content lookups (stemmed FTS5 top-5 snippets â
 ## Tasks and obligations
 Capture tracked tasks with `python .memory/tools/structural.py tasks apply <event.json>`.
 The canonical, append-only `.memory/wiki/task-ledger.md` owns task values; prose and STATE
-link to it instead of keeping another editable task register. Read with `tasks show [ID]`.
+link to it instead of keeping another editable task register. Read `tasks current [ID]` for a
+compact computed view with revision/digest and deduplicated field sources; `tasks show [ID]`
+provides expanded provenance. Use `tasks history [ID]` or `tasks at REV [ID]` for history.
+Regenerate current views after changes. Before publishing a saved JSON view, run
+`tasks verify <snapshot.json>`: altered or stale views fail. Current values in prose are
+not another authority. Do not derive current task state from old tables plus later prose.
 Use `tasks check --complete` before presenting a complete task inventory. Missing information
 is explicit `null` plus `unknown_fields`, never `false`, an empty list, or a guessed default.
 An absent ledger is untracked work, not proof there are no obligations. Migrate legacy prose

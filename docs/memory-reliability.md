@@ -116,3 +116,42 @@ T24 blocks T18 even when T14 remains done. New tests cover advisory versus hard 
 atomic failures, unknown targets, cycles, and eight readiness/status combinations.
 
 Validation: **13/13** task tests (**19/19** combined); four capture/recovery experiments, **8** fresh model sessions. Both baseline and new workflow pass **2/2** original/new scenarios. Deterministic edge and readiness checks establish the new guarantees; this model sample does not establish superiority.
+
+## 4. Current views are computed, never independently edited
+
+```sh
+python .memory/tools/structural.py tasks current
+python .memory/tools/structural.py tasks current T01
+python .memory/tools/structural.py tasks at 1 T01
+python .memory/tools/structural.py tasks history T01
+python .memory/tools/structural.py tasks current > task-view.json
+python .memory/tools/structural.py tasks verify task-view.json
+```
+
+Every current view has a revision, content digest, selection scope, completeness flag,
+current values, ready tasks, definite/uncertain release obligations, and event references.
+Sources are deduplicated rather than repeated for each field. This reduces output without
+losing provenance. History and historical views are explicitly labeled. A revision inside
+an atomic batch with unresolved forward references cannot form a valid graph; query the
+completed batch revision instead. A current view is rebuilt on every read, with no cache.
+
+`verify` compares the complete selected view, including types and watermark, against a fresh
+reduction. It rejects stale or altered output and refuses to publish a historical view as
+current. This verifies generated JSON snapshots, not arbitrary natural-language summaries.
+Unknown task status is an uncertain obligation, not an assumed open task. STATE's focus
+and the task ledger's obligations remain distinct; an idle session does not cancel tasks.
+
+Alternatives: manually maintained current tables can diverge; replaying prose shifts the
+merge work back to each reader. The selected derived view has one canonical event source
+and lets a reader request just one task. A single task with forty owner changes yields a
+current packet smaller than one third of the full history in the regression fixture.
+
+The installed resume packet includes bounded task counts and a current-view pointer.
+A real fresh install, normal guarded commit, resume, and updater preserved the task ledger
+byte-for-byte. The view/history/verification tests add coverage for newly withdrawn dates,
+unchanged fields, stale publication, unknown status, and JSON boolean/number distinctions.
+
+Validation: **25** cumulative targeted regressions, including the installed update test.
+Four additional paired capture/recovery experiments (**8** fresh model sessions) pass:
+baseline **2/2**, new **2/2**. Both retain the current/historical distinction and the
+withdrawn date in this small sample. No accuracy superiority is claimed.
