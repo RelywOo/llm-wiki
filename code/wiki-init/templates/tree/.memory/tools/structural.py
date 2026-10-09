@@ -13,6 +13,7 @@ Subcommands:
   checkpoint        one-call /wiki-checkpoint write-side recon: cp delta + dirty tree +
                     computed session/block/next-decision-id + log/commit skeletons
                     (SLIM by design: pages are Read on the write path anyway)
+  tasks ...         capture, validate and read canonical task events (tasks for usage)
   decision ID       JSON current decision + full scope-preserving lineage; ambiguity fails
   active            active decision set, newest-first (used by /wiki-resume)
   section F "H"     print the "## H..." section of file F through the next "## " or EOF
@@ -3035,6 +3036,12 @@ def _dispatch(argv):
         _integrity_cli("checkpoint", checkpoint_pack)
     elif cmd == "active":
         _print_active()
+    elif cmd == "tasks":
+        import task_memory
+        try:
+            task_memory.main(WIKI.parents[1], argv[2:])
+        except (ValueError, OSError, TypeError, KeyError) as exc:
+            raise CliUsageError(str(exc)) from exc
     elif cmd == "decision":
         if len(argv) != 3:
             raise CliUsageError("usage: structural.py decision <id or decision path>")

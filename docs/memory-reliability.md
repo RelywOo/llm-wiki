@@ -52,3 +52,38 @@ Fresh model sessions: baseline **3/3**, instruction-only **3/3**, resolver **3/3
 - baseline: median 22.3 seconds (three sessions).
 - instruction: median 13.6 seconds (three sessions).
 - resolved: median 11.4 seconds (three sessions).
+
+## 2. Required task fields have one canonical home
+
+The opt-in `.memory/wiki/task-ledger.md` stores sourced, ordered JSON events inside
+readable Markdown. It is the task record, not a cache of a separately editable table.
+The model captures source meaning; Python validates structure and computes values.
+Legacy prose is not silently migrated. An absent ledger reports `tracked: false` and
+`complete: false`, rather than claiming no work exists.
+
+Commands:
+
+```sh
+python .memory/tools/structural.py tasks apply event.json
+python .memory/tools/structural.py tasks show T01
+python .memory/tools/structural.py tasks check --complete
+```
+
+A creation event contains every field, using `null` for explicit unknowns. Updates only
+name changed fields, preserving everything else and its field-level event/source/reason.
+Status changes require a sourced reason like every other event. Values are never coerced:
+`"false"`, `0`, and `false` are different inputs. Missing fields are rejected before writing.
+`--complete` fails on unknowns; ordinary reads retain and identify them.
+
+The writer uses a sequence precondition, an exclusive lock, an atomic replacement, and
+file/directory fsync on POSIX. A stale lock requires inspection after an interrupted writer;
+it is not automatically discarded. These protections do not replace backups or prove
+hardware power-loss behavior. The normal staged Git validator and history audit reject
+ledger rewriting/deletion, including writes made outside the CLI. The updater delivers
+the tool and instructions while preserving knowledge, including this ledger.
+
+A richer prose table was considered but cannot enforce completeness. Repeated full snapshots
+were rejected because a partial update could accidentally erase an unrelated field. The
+selected event representation preserves unchanged fields without duplicated current truth.
+
+Development checks: **8/8** task regressions; **14/14** combined regressions. The 24-task fixture retains **15/15** open release obligations after navigation compaction. Four paired capture/recovery experiments (eight fresh model sessions) pass: baseline **2/2**, new **2/2**. Both answer lists and explicit unknowns are checked. This demonstrates the workflow, not a statistically established accuracy advantage. The full installed distribution check passes.

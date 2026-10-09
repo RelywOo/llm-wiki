@@ -152,6 +152,10 @@ def provenance_violations(baseline: dict[str, str], candidate: dict[str, str],
     Unchanged legacy units are grandfathered. Derived rollup units may cite a resolved owner page.
     """
     probs = []
+    if "task-ledger.md" in baseline or "task-ledger.md" in candidate:
+        from task_memory import validate_transition
+        probs += validate_transition(baseline.get("task-ledger.md", ""),
+                                     candidate.get("task-ledger.md", ""), source_exists)
     for path, text in sorted(candidate.items()):
         if path == "log.md" or not path.endswith(".md"):
             continue

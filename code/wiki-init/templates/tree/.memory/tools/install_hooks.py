@@ -24,7 +24,7 @@ CORE_RUNTIME_FILES = (
     ".memory/tools/wiki_validation.py",
     ".memory/tools/dual_sync.py",
 )
-OPTIONAL_RUNTIME_FILES = (".memory/tools/markdown_io.py",)
+OPTIONAL_RUNTIME_FILES = (".memory/tools/markdown_io.py", ".memory/tools/task_memory.py")
 RUNTIME_FILES = CORE_RUNTIME_FILES + OPTIONAL_RUNTIME_FILES
 INSTALL_NAME = "wiki-memory-hooks"
 MARKER = "WIKI_MEMORY_ISOLATED_PRE_COMMIT_V1"

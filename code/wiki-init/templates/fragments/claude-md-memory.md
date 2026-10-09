@@ -47,6 +47,23 @@ Deterministic regex/FTS pass over `.memory/wiki/` — prefer it over ad-hoc grep
 One-line docs per subcommand on demand: `python .memory/tools/structural.py help`.
 Most used: `search "<terms>"` for content lookups (stemmed FTS5 top-5 snippets — finds word forms grep misses); `section <file> "<## header>"` to load ONE section instead of a full page (`toc <file>` lists the headers); `active` for the active decision set.
 
+## Tasks and obligations
+Capture tracked tasks with `python .memory/tools/structural.py tasks apply <event.json>`.
+The canonical, append-only `.memory/wiki/task-ledger.md` owns task values; prose and STATE
+link to it instead of keeping another editable task register. Read with `tasks show [ID]`.
+Use `tasks check --complete` before presenting a complete task inventory. Missing information
+is explicit `null` plus `unknown_fields`, never `false`, an empty list, or a guessed default.
+An absent ledger is untracked work, not proof there are no obligations. Migrate legacy prose
+only by reviewing original sources; do not infer a missing release flag from silence.
+
+Event JSON: `seq` (next integer), `id`, `op` (`create` or `update`), `values`, `reason`,
+`source` (`path` and `quote`). Creation requires all fields: `title`, `status` (open,
+in_progress, blocked, done, cancelled), `owner`, `due` (YYYY-MM-DD), `priority` (0..4),
+`release_required` (boolean), `dependencies` (direct hard prerequisite IDs). Explicit `null`
+is allowed for unknown fields. Updates specify only changed fields and retain all others.
+Every event has its own reason and source; field provenance is computed. Sequence conflicts
+and duplicate task IDs fail without writing. Do not edit or truncate the ledger directly.
+
 ## Applying decisions
 Before answering or implementing a mutable rule, run `python .memory/tools/structural.py decision <id>`.
 Use its current successor and apply the returned lineage oldest to newest by scope; a partial
