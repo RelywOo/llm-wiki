@@ -13,6 +13,7 @@ Subcommands:
   checkpoint        one-call /wiki-checkpoint write-side recon: cp delta + dirty tree +
                     computed session/block/next-decision-id + log/commit skeletons
                     (SLIM by design: pages are Read on the write path anyway)
+  decision ID       JSON current decision + full scope-preserving lineage; ambiguity fails
   active            active decision set, newest-first (used by /wiki-resume)
   section F "H"     print the "## H..." section of file F through the next "## " or EOF
   toc F             list file F's "## " headers in order (the cheap nav-aid TOC, ~0 tokens)
@@ -49,6 +50,7 @@ Subcommands:
 """
 from __future__ import annotations
 
+import json
 import re
 import sqlite3
 import subprocess
@@ -269,6 +271,66 @@ def extract(wiki: Path = WIKI):
 
     active = sorted(i for i in decisions if i not in superseded)
     return edges, warnings, sorted(superseded), active
+
+
+def decision_packet(identifier: str, wiki: Path = WIKI) -> dict:
+    """Resolve a decision in either direction without inferring partial replacements.
+
+    Full lineage remains available: an unchanged scope may be defined by an ancestor.
+    Branches are ambiguous, never arbitrarily reduced to the largest/newest ID.
+    """
+    files = sorted((wiki / "decisions").glob("*.md"))
+    problems = _doctor_decisions({p.name: read_markdown(p) for p in files})
+    if problems:
+        raise ValueError("invalid decision graph: " + "; ".join(problems))
+    by_id = {p.stem[:4]: p for p in files}
+    did = Path(identifier).name.split("-", 1)[0].removesuffix(".md")
+    if did not in by_id:
+        raise ValueError(f"unknown decision: {identifier}")
+    parent, children = {}, {}
+    for key, path in by_id.items():
+        fm = FRONTMATTER.match(_norm_eol(read_markdown(path)))
+        found = SUPERSEDES.search(fm.group(1)) if fm else None
+        if found:
+            old = found.group(1)
+            parent[key] = old
+            children.setdefault(old, []).append(key)
+    first = did
+    while first in parent:
+        first = parent[first]
+    chain, node = [], first
+    while True:
+        chain.append(node)
+        next_ids = children.get(node, [])
+        if len(next_ids) > 1:
+            raise ValueError(f"ambiguous successors of {node}: {', '.join(next_ids)}; "
+                             "review scopes explicitly before applying a rule")
+        if not next_ids:
+            break
+        node = next_ids[0]
+    return {
+        "requested": did, "current": node,
+        "status": "current" if did == node else "superseded",
+        "instruction": "Apply changes oldest to newest by scope. Preserve unchanged scopes. "
+                       "Do not treat historical values as current. If scope is unclear, report unknown.",
+        "lineage": [{"id": key, "path": ".memory/wiki/" + by_id[key].relative_to(wiki).as_posix(),
+                     "status": "current" if key == node else "superseded",
+                     "text": read_markdown(by_id[key])} for key in chain],
+    }
+
+
+def decision_read_notice(path: Path, wiki: Path = WIKI) -> str:
+    if path.resolve().parent != (wiki / "decisions").resolve():
+        return ""
+    try:
+        packet = decision_packet(path.name, wiki)
+    except ValueError as exc:
+        return f"DECISION UNRESOLVED: {exc}"
+    if packet["status"] == "superseded":
+        return (f"SUPERSEDED: {packet['requested']} is historical; current successor "
+                f"{packet['current']}. Before applying: structural.py decision {packet['requested']}")
+    return (f"CURRENT decision {packet['current']}; resolve inherited scopes with "
+            f"structural.py decision {packet['current']}")
 
 
 def section(text: str, header_prefix: str) -> str | None:
@@ -2973,6 +3035,13 @@ def _dispatch(argv):
         _integrity_cli("checkpoint", checkpoint_pack)
     elif cmd == "active":
         _print_active()
+    elif cmd == "decision":
+        if len(argv) != 3:
+            raise CliUsageError("usage: structural.py decision <id or decision path>")
+        try:
+            print(json.dumps(decision_packet(argv[2]), ensure_ascii=False, indent=2))
+        except ValueError as exc:
+            raise CliUsageError(str(exc)) from exc
     elif cmd == "section":
         # `section <file> "<header>"` — print one "## " section through the next "## " or
         # EOF. 0-token slice so resume/checkpoint full-load but only consume named sections.
@@ -2981,6 +3050,11 @@ def _dispatch(argv):
         path = _resolve_page(argv[2])
         if path is None:
             raise CliUsageError(f"section: file not found: {argv[2]}")
+        notice = decision_read_notice(path)
+        if notice:
+            print(notice)
+            if notice.startswith("DECISION UNRESOLVED"):
+                raise CliUsageError("resolve the decision graph before reading a rule")
         block = section(read_markdown(path), argv[3])
         print(block if block is not None
               else f'section: no "## {argv[3].lstrip("# ").strip()}*" header in {argv[2]}')

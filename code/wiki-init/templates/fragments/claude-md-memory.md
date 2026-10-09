@@ -47,6 +47,13 @@ Deterministic regex/FTS pass over `.memory/wiki/` — prefer it over ad-hoc grep
 One-line docs per subcommand on demand: `python .memory/tools/structural.py help`.
 Most used: `search "<terms>"` for content lookups (stemmed FTS5 top-5 snippets — finds word forms grep misses); `section <file> "<## header>"` to load ONE section instead of a full page (`toc <file>` lists the headers); `active` for the active decision set.
 
+## Applying decisions
+Before answering or implementing a mutable rule, run `python .memory/tools/structural.py decision <id>`.
+Use its current successor and apply the returned lineage oldest to newest by scope; a partial
+replacement preserves scopes it did not change. Search snippets and raw Markdown are discovery
+and history, not proof that a rule is current. An ambiguous graph or unclear scope is unresolved:
+report the gap instead of choosing the largest ID. Do not rewrite old decision files.
+
 ## Wiki write-guard
 A PreToolUse hook (`.memory/tools/wiki_guard.py`) DENIES edits to filed (committed) `decisions/*.md` and any non-append change to `log.md`; `structural.py guard` re-checks at checkpoint (catches Bash/sed edits the hook can't see). Denied? Don't fight the hook: file a new decision with `supersedes:`, or append to the log instead.
 
