@@ -83,8 +83,10 @@ WIKILINK = re.compile(r"\[\[([^\]]+)\]\]")
 # meta-doc placeholders: [[slug]]/[[owner]]-style tokens used when a page DOCUMENTS the
 # link syntax itself (decision 0017 does) — never real pages, never broken links
 PLACEHOLDER_SLUGS = frozenset({"slug", "owner", "wikilink", "link"})
-SUPERSEDES = re.compile(r"^supersedes:\s*(\d{4})\s*$", re.M)
-SUPERSEDES_KEY = re.compile(r"^supersedes\s*:", re.M)
+SUPERSEDES = re.compile(r"^supersedes:[ \t]*(\d{4})[ \t]*$", re.M)
+# Recognize malformed spellings too, so they fail validation instead of silently
+# removing an edge from the current-decision graph. Only SUPERSEDES executes it.
+SUPERSEDES_KEY = re.compile(r"^[ \t]*[\"']?supersedes[\"']?[ \t]*:", re.M | re.I)
 FRONTMATTER = re.compile(r"\A---\n(.*?)\n---", re.S)
 CONTRADICTED = re.compile(r"^contradicted:\s*(\S+)\s*$", re.M)
 CONTRADICTED_KEY = re.compile(r"^contradicted\s*:", re.M)
@@ -796,15 +798,16 @@ def _newly_filed_decision_compare(
     return violations
 
 
-def _head_decision_snapshot(root: Path) -> dict[str, str]:
-    """Read Markdown decisions from HEAD; an unborn repository has an empty snapshot."""
+def _head_filed_snapshot(root: Path) -> dict[str, str]:
+    """Read filed decisions and task events from HEAD, including mid-session commits."""
     probe = _run_git(root, "rev-parse", "--verify", "HEAD^{commit}",
                      allowed_rc=frozenset({0, 128}))
     if probe.returncode != 0:
         return {}
     out = {}
     raw_names = _git_bytes(
-        root, "ls-tree", "-r", "--name-only", "-z", "HEAD", "--", ".memory/wiki/decisions")
+        root, "ls-tree", "-r", "--name-only", "-z", "HEAD", "--",
+        ".memory/wiki/decisions", ".memory/wiki/task-ledger.md")
     for raw_name in raw_names.split(b"\0"):
         if not raw_name:
             continue
@@ -921,18 +924,24 @@ def guard():
                     root, "show", f"{sha}:{name}", strip=False)
     current = {f.relative_to(WIKI).as_posix(): read_markdown(f)
                for f in WIKI.rglob("*.md") if not f.is_symlink()}
+    filed = _head_filed_snapshot(root)
     violations = (_history_integrity_violations(root)
                   + _worktree_wiki_type_violations(WIKI)
                   + _newly_filed_decision_compare(
-                      _head_decision_snapshot(root), baseline, current,
+                      filed, baseline, current,
                       _index_decision_snapshot(root)))
     health_fail, health_warn, _health_ok = enforcement_health(root, full=False)
     violations += [f"enforcement health: {x}" for x in health_fail]
     compare_violations, warnings = _guard_compare(baseline, current)
     warnings += [f"enforcement health: {x}" for x in health_warn]
     violations += compare_violations
+    # Task events become historical evidence at their first commit, which may
+    # precede the next STATE checkpoint. History audit still validates every
+    # committed transition; the live check validates only the unfiled suffix.
+    provenance_baseline = dict(baseline)
+    provenance_baseline['task-ledger.md'] = filed.get('task-ledger.md', '')
     violations += provenance_violations(
-        baseline, current,
+        provenance_baseline, current,
         source_exists=lambda rel: _worktree_source_exists(root, rel),
         commit_exists=lambda sha: _commit_exists(root, sha),
         source_read=lambda rel: read_markdown(root / rel))

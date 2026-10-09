@@ -87,6 +87,21 @@ class MemoryReliabilityTest(unittest.TestCase):
         self.assertEqual(json.loads(self.cli('decision', '0001').stdout)['current'], '0002')
         self.assertEqual(json.loads(self.cli('decision', '0002').stdout)['current'], '0002')
 
+    def test_malformed_supersession_never_certifies_old_rule_as_current(self):
+        old = self.decision('0001', 'Transfer ceiling is 512 KiB.')
+        receipt = self.cli('evidence', 'quote', old, '8', '8').stdout
+        (self.root/'receipt.json').write_text(receipt)
+        for field in (' supersedes: 0001', '\tsupersedes: 0001',
+                      '"supersedes": 0001', 'Supersedes: 0001',
+                      'supersedes:\n  0001'):
+            with self.subTest(field=field):
+                self.write('.memory/wiki/decisions/0002-rule.md',
+                           '---\nid: 0002\ndate: 2026-10-10\n'+field+
+                           '\n---\n# Rule\n## Decision\nTransfer ceiling is 2048 KiB.\n')
+                self.assertNotEqual(self.cli('decision', '0001', ok=False).returncode, 0)
+                self.assertNotEqual(self.cli('evidence', 'check', 'receipt.json',
+                                             '--current', ok=False).returncode, 0)
+
 
 if __name__ == '__main__':
     unittest.main()

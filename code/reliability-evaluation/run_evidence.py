@@ -59,9 +59,10 @@ for ci,(name,source,claims,expected) in enumerate(cases):
                     verified.append(result.returncode==0)
             passed=meta['completed'] and answer['claims']==expected and len(receipts)>=2 and all(exact) and (all(verified) if variant=='new' else True)
         except Exception as exc:answer={'error':str(exc)};exact=[];verified=[];passed=False
-        claims=answer.get('claims',{})
-        normalized={k:(v.get('verdict') if isinstance(v,dict) else v) for k,v in claims.items()}
-        schema_valid=bool(claims) and all(type(v) is bool for v in claims.values())
+        verdicts=answer.get('claims',{})
+        if not isinstance(verdicts,dict): verdicts={}
+        normalized={k:(v.get('verdict') if isinstance(v,dict) else v) for k,v in verdicts.items()}
+        schema_valid=set(verdicts)==set(expected) and all(type(v) is bool for v in verdicts.values())
         semantic_passed=normalized==expected and all(type(v) is bool for v in normalized.values())
         row={'schema_valid':schema_valid,'semantic_passed':semantic_passed,'case':name,'variant':variant,'passed':passed,'expected':expected,'answer':answer,'exact_quotes':exact,'receipt_checks':verified,'meta':meta}
         (out/'result.json').write_text(json.dumps(row,indent=2))

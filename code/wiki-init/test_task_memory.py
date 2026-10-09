@@ -285,5 +285,29 @@ class TaskMemoryTest(unittest.TestCase):
         self.assertNotEqual(result.returncode,0)
         self.assertIn('duplicate JSON key',result.stderr)
 
+    def test_checkpoint_accepts_filed_excerpt_after_mid_session_source_change(self):
+        self.root=self.root/'installed';self.root.mkdir()
+        def run(*args):
+            result=subprocess.run(args,cwd=self.root,text=True,capture_output=True)
+            self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+        run('git','init','-q');run('git','config','user.name','Test')
+        run('git','config','user.email','test@example.invalid')
+        run(sys.executable,str(HERE/'install.py'),'historical-source','--codex','--portable')
+        source=self.root/'.memory/research/events.md'
+        source.parent.mkdir(exist_ok=True)
+        source.write_text('E001: Release task is required.\n')
+        self.apply(self.event())
+        run('git','add','.');run('git','commit','-qm','File task between checkpoints')
+        source.write_text('Revised source content.\n')
+        run('git','add','.');run('git','commit','-qm','Revise mutable source')
+        self.cli('guard')
+        # A new, unfiled event still needs a quote in the current source.
+        source.write_text('E001: Release task is required.\n')
+        self.apply(self.event(2,op='update',values={'owner':'Mei'}))
+        source.write_text('Revised source content.\n')
+        result=self.cli('guard',ok=False)
+        self.assertNotEqual(result.returncode,0)
+        self.assertIn('quote mismatch: event 2',result.stdout+result.stderr)
+
 
 if __name__=='__main__': unittest.main()
