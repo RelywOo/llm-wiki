@@ -244,3 +244,54 @@ still need separate validation. Exact citations and valid schemas do not substit
 
 Reproduction commands and the bundled isolation harness are documented in
 [the evaluation guide](../code/reliability-evaluation/README.md).
+
+## Acceptance follow up 2026 10 10
+
+The initial candidate `6717865` did not pass independent review. Follow-up fixes
+`1f3f1ca` and `d84a45d` reject malformed supersession metadata, distinguish task
+events filed at HEAD from new events since a STATE checkpoint, preserve each
+evidence experiment's prompt across both arms, and reject numeric verdicts where
+booleans are required. Each finding has a regression that failed before its fix.
+
+Final discovery runs **60 tests: 55 pass and 5 existing user-systemd tests skip**.
+Distribution and updater checks pass. Three actual baseline-to-candidate upgrades
+preserve nine knowledge files byte-for-byte, preserve runtime choices, support a
+guarded task commit, and remain unchanged on a second update. Additional CLI checks
+cover eight competing writers, interrupted-lock recovery, 120 sparse updates,
+atomic rejection, and evidence falsification.
+
+The acceptance experiment contains five new scenarios, two repetitions, and separate
+capture/recovery sessions. The candidate runs on `gpt-6-luna` and `gpt-6.1-sol`, both
+at medium reasoning; baseline `aeca761` runs on Luna. All three arms recover 58/58
+fields by meaning and pass 10/10 generated-code evaluations. Strict trajectory
+scores are baseline Luna 4/10, candidate Luna 7/10, and candidate Sol 10/10. Strict
+scores include representation differences: unknown versus null, list ordering, and
+the inclusion of "because" or a terminal period in an exact reason phrase. Those
+failures remain recorded and are not described as lost facts. Candidate receipts
+have stricter hash/range requirements than baseline excerpt citations, so these
+trajectory scores are not comparable measures of memory accuracy alone.
+
+Canonical capture audits pass 20/20; reverse-order decision reads with three-source
+provenance pass 2/2. However, one candidate Luna recovery manually corrupts an
+extracted receipt's SHA-256. The checker detects the mismatch and the agent discloses
+it, but the final receipt remains invalid. A fresh six-session run of the corrected
+evidence experiment also finds repeated output-schema violations: meanings and
+all 12 quotations are correct, while extra fields invalidate four of six candidate
+receipts. These failures were not rerun or normalized away.
+
+**Acceptance remains on hold for the complete five-priority workflow.** Mechanical
+validation and knowledge preservation pass, but reliable final evidence delivery is
+not established. The next change should preserve tool-generated receipts through
+programmatic file/output assembly, keep interpretation separate, and validate the
+actual final artifact before publishing it. Passing facts or a successful model
+turn alone does not satisfy that contract. This is a pending change, not a delivered
+guarantee. The branch has not been merged or deployed to existing projects.
+
+The subject total is 68 real Codex sessions, including the two reverse-order reads
+and six evidence-runner sessions. All completed using existing ChatGPT authorization;
+no Astra or paid API fallback was used. Subject CLI usage totals 10,358,202 input
+tokens (9,088,640 cached) and 151,882 output tokens. This excludes the controlling
+conversation and independent Sol reviewers and is not subscription-quota usage.
+Concurrent local/additional checks prevent a controlled speed comparison. The
+small synthetic corpus cannot establish universal model reliability or accuracy
+superiority; runtime hooks/checkpoints were tested separately from subject sessions.
