@@ -64,6 +64,7 @@ for ci,(name,source,claims,expected) in enumerate(cases):
         normalized={k:(v.get('verdict') if isinstance(v,dict) else v) for k,v in verdicts.items()}
         schema_valid=set(verdicts)==set(expected) and all(type(v) is bool for v in verdicts.values())
         semantic_passed=normalized==expected and all(type(v) is bool for v in normalized.values())
+        passed=passed and schema_valid
         row={'schema_valid':schema_valid,'semantic_passed':semantic_passed,'case':name,'variant':variant,'passed':passed,'expected':expected,'answer':answer,'exact_quotes':exact,'receipt_checks':verified,'meta':meta}
         (out/'result.json').write_text(json.dumps(row,indent=2))
         for link in (out/'session/profile').glob('auth.json'):
