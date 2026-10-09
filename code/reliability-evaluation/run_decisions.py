@@ -11,7 +11,7 @@ import subprocess
 import sys
 
 p = argparse.ArgumentParser()
-p.add_argument('--runtime', required=True, type=Path)
+p.add_argument('--runtime', type=Path, default=Path(__file__).with_name('runtime.py'))
 p.add_argument('--baseline', required=True, type=Path)
 p.add_argument('--output', required=True, type=Path)
 a = p.parse_args()

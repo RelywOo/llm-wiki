@@ -32,10 +32,9 @@ remain possible; the shared agent instructions require resolution before applica
 `python -m unittest discover -s code/wiki-init -p test_memory_reliability.py -v`
 
 `code/reliability-evaluation/run_decisions.py` compares the three configurations in fresh
-isolated sessions. It accepts paths to a baseline checkout, output folder, and the local
-experiment's `runtime.py` harness. The harness uses the existing Codex subscription and
-Landlock; it neither supplies expected answers nor substitutes model calls. It is a
-local research dependency, not part of the installed memory runtime. Raw results belong
+isolated sessions. It accepts paths to a baseline checkout and output folder, and optionally an alternative
+`runtime.py` harness. A Linux Landlock/Codex harness is bundled beside the runner. The harness uses the existing Codex subscription and
+Landlock; it neither supplies expected answers nor substitutes model calls. The harness is research tooling, not part of the installed memory runtime. Raw results belong
 outside the public distribution. Small scenario samples are diagnostic, not a universal
 model reliability estimate.
 
@@ -67,6 +66,27 @@ Commands:
 python .memory/tools/structural.py tasks apply event.json
 python .memory/tools/structural.py tasks show T01
 python .memory/tools/structural.py tasks check --complete
+```
+
+For example, after preserving the quoted statement in `.memory/research/events.md`,
+`event.json` can contain:
+
+```json
+{
+  "seq": 1,
+  "id": "T01",
+  "op": "create",
+  "values": {
+    "title": "Migration tests", "status": "open", "owner": "Alex",
+    "due": "2026-11-12", "priority": 1,
+    "release_required": true, "dependencies": []
+  },
+  "reason": "Capture the approved release obligation",
+  "source": {
+    "path": ".memory/research/events.md",
+    "quote": "E001: Migration tests are open, assigned to Alex, due 2026-11-12, priority 1, required for release, with no prerequisites."
+  }
+}
 ```
 
 A creation event contains every field, using `null` for explicit unknowns. Updates only
@@ -155,3 +175,72 @@ Validation: **25** cumulative targeted regressions, including the installed upda
 Four additional paired capture/recovery experiments (**8** fresh model sessions) pass:
 baseline **2/2**, new **2/2**. Both retain the current/historical distinction and the
 withdrawn date in this small sample. No accuracy superiority is claimed.
+
+## 5. Evidence location, freshness and meaning are separate checks
+
+```sh
+python .memory/tools/structural.py evidence quote .memory/research/events.md 1 2 --event E001 > receipt.json
+python .memory/tools/structural.py evidence check receipt.json
+python .memory/tools/structural.py evidence check decision-receipt.json --current
+```
+
+The extractor returns exact line text (line endings normalized), line numbers, a source
+SHA-256 and an optional verified event label. The checker accepts a receipt or array and
+rejects altered text/ranges, changed sources, wrong files, invented event labels, unsafe
+paths and malformed input. `--current` specifically requires an unambiguous active decision;
+a raw research file has no automatic current-decision status. Historical decision quotes
+remain valid history. An inherited scope needs explicit review of ancestor plus successor,
+not automatic rejection of every historical fact and not blind acceptance of an old rule.
+
+Every result says `semantic_support: not_checked`. For example, an exact quote saying a
+region is lab-only is real evidence, but it cannot support a claim that production is
+allowed there. Scope, reason and entailment remain a separate agent/reviewer assessment.
+Paraphrases must be labeled, and a multi-source inference must cite its component excerpts.
+
+New task events require an exact source excerpt both at capture and against the staged
+source tree at commit. An unstaged source repair cannot hide a bad staged citation. Once
+filed, excerpts remain historical evidence when the source changes. Current views expose
+`matches_current_file`, `historical_excerpt`, or `source_unavailable`; the stored fact is
+not silently discarded. Retain stable capture sources through the first checkpoint and
+use Git to inspect older source versions. Structured capture still requires the agent to
+interpret the source correctly: a matching quote cannot prove its chosen field values.
+
+This addition does not retroactively certify arbitrary legacy Markdown source markers.
+Those still establish source reachability; use receipts for exact quotations and the new
+ledger contract for tracked tasks. Handwritten prose and bypassed workflows can still be
+wrong. Tests deliberately preserve this distinction rather than reporting a misleading
+universal "evidence verified" flag.
+
+## Final validation and limits (2026-10-10)
+
+- **35 new regression tests pass.** Full discovery: **56 run, 51 pass, 5 skip** because
+  Linux user systemd was unavailable. Fresh distribution and updater selfchecks pass.
+- **42 real fresh Codex sessions completed**, with no timeout or substituted model call:
+  9 decision sessions; 8 each for fields, edges and views; 6 evidence sessions;
+  2 original-corpus replays; 1 final combined held-out smoke test.
+- The full original decision evaluation yields **9/9 facts and 55/55 code checks** for
+  both baseline and new tooling, starting from identical knowledge digests. The earlier
+  stochastic failure did not recur in this pair. This is not proof of an accuracy gain.
+- The evidence experiment gets **12/12 semantic verdicts and 12/12 exact excerpts** across
+  both arms. All **6 new receipts** verify. Strict JSON shape passes baseline **2/3** and
+  new **1/3**: nested verdict objects remain recorded as shape failures, not erased by
+  semantic scoring. The initial scorer path bug was fixed without rerunning subjects.
+- The final new smoke test combines an inherited server limit, changed edge limit,
+  unknown task owner, release obligation and verified E103 receipt; it passes.
+
+Measured CLI usage across these sessions: **3,297,467 input tokens**, of which **2,792,448
+cached**, **505,019 uncached**, and **42,798 output tokens**. Summed subject time was about
+13.4 minutes. These are cumulative CLI measurements, not peak context or subscription
+percentage; they exclude the controlling conversation and setup. Local checks overlapped
+some sessions, so no controlled speed comparison is claimed. Existing ChatGPT login was
+used, with no paid API fallback. The final auth-link inventory was empty.
+
+The branch closes concrete tool-level failure paths under its documented workflow. It does
+not establish that every agent will follow instructions, correctly interpret every source,
+or use exact JSON output shapes. Legacy prose requires source-reviewed migration into the
+canonical task ledger; existing projects were not automatically upgraded. Semantic support,
+long-running real-project behavior, concurrent human edits and physical power-loss recovery
+still need separate validation. Exact citations and valid schemas do not substitute for that.
+
+Reproduction commands and the bundled isolation harness are documented in
+[the evaluation guide](../code/reliability-evaluation/README.md).

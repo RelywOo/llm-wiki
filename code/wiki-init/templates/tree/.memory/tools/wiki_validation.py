@@ -145,7 +145,7 @@ def _valid_source(marker: str, source_exists, commit_exists) -> bool:
 
 
 def provenance_violations(baseline: dict[str, str], candidate: dict[str, str],
-                          source_exists, commit_exists) -> list[str]:
+                          source_exists, commit_exists, source_read=None) -> list[str]:
     """Minimum evidence floor for new/changed durable Markdown units.
 
     A source marker proves only that an inspectable basis exists, never that the prose is true.
@@ -155,7 +155,7 @@ def provenance_violations(baseline: dict[str, str], candidate: dict[str, str],
     if "task-ledger.md" in baseline or "task-ledger.md" in candidate:
         from task_memory import validate_transition
         probs += validate_transition(baseline.get("task-ledger.md", ""),
-                                     candidate.get("task-ledger.md", ""), source_exists)
+                                     candidate.get("task-ledger.md", ""), source_exists, source_read)
     for path, text in sorted(candidate.items()):
         if path == "log.md" or not path.endswith(".md"):
             continue

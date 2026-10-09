@@ -89,6 +89,14 @@ python .memory/tools/structural.py tasks current
 python .memory/tools/structural.py tasks check --complete
 ```
 
+Exact quotations can be extracted and checked without asking a model to reproduce them:
+
+```sh
+python .memory/tools/structural.py evidence quote .memory/research/events.md 1 2 > receipt.json
+python .memory/tools/structural.py evidence check receipt.json
+```
+
+A valid quotation proves its location and freshness; semantic support requires a separate review.
 Legacy prose is preserved and requires a source-reviewed migration before it becomes a
 structured task record. See [memory reliability](docs/memory-reliability.md) for the event
 contract, regression coverage, tradeoffs, and measured limitations.

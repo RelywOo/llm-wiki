@@ -244,5 +244,46 @@ class TaskMemoryTest(unittest.TestCase):
         self.assertEqual(before,ledger.read_bytes())
         self.assertEqual(json.loads(self.cli('tasks','current').stdout)['open_release_obligations'],['T01'])
 
+    def test_capture_rejects_a_quote_that_the_existing_source_does_not_contain(self):
+        event=self.event();event['source']['quote']='Invented approval that is not in the source.'
+        result=self.apply(event,ok=False)
+        self.assertNotEqual(result.returncode,0)
+        self.assertIn('quote',result.stderr)
+
+    def test_commit_checks_staged_source_not_unstaged_repair(self):
+        def git(*args): subprocess.run(['git',*args],cwd=self.root,check=True,capture_output=True)
+        git('init','-q');git('config','user.name','Test');git('config','user.email','test@example.invalid')
+        git('add','.');git('commit','-qm','Initial tools and sources')
+        self.apply(self.event())
+        source=self.root/'.memory/research/events.md';original=source.read_text()
+        source.write_text('Nothing here supports the claimed quote.\n')
+        git('add','.memory')
+        source.write_text(original)
+        result=subprocess.run([sys.executable,'.memory/tools/pre_commit_guard.py'],cwd=self.root,text=True,capture_output=True)
+        self.assertNotEqual(result.returncode,0)
+        self.assertIn('quote mismatch',result.stdout+result.stderr)
+
+    def test_filed_excerpt_survives_source_change_with_visible_warning(self):
+        def git(*args): subprocess.run(['git',*args],cwd=self.root,check=True,capture_output=True)
+        git('init','-q');git('config','user.name','Test');git('config','user.email','test@example.invalid')
+        self.apply(self.event());git('add','.');git('commit','-qm','Capture sourced task')
+        source=self.root/'.memory/research/events.md';source.write_text('Revised source content.\n')
+        git('add','.memory/research/events.md')
+        result=subprocess.run([sys.executable,'.memory/tools/pre_commit_guard.py'],cwd=self.root,text=True,capture_output=True)
+        self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+        view=json.loads(self.cli('tasks','current').stdout)
+        self.assertEqual(view['tasks']['T01']['owner'],'Alex')
+        self.assertEqual(view['sources']['1']['current_file']['status'],'historical_excerpt')
+        source.unlink()
+        view=json.loads(self.cli('tasks','current').stdout)
+        self.assertEqual(view['sources']['1']['current_file']['status'],'source_unavailable')
+
+    def test_duplicate_json_fields_are_not_silently_collapsed(self):
+        text=json.dumps(self.event()).replace('"release_required": true','"release_required": true, "release_required": false')
+        (self.root/'event.json').write_text(text)
+        result=self.cli('tasks','apply','event.json',ok=False)
+        self.assertNotEqual(result.returncode,0)
+        self.assertIn('duplicate JSON key',result.stderr)
+
 
 if __name__=='__main__': unittest.main()

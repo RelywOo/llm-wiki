@@ -7,7 +7,7 @@ import shutil
 import subprocess
 
 p=argparse.ArgumentParser()
-p.add_argument('--runtime',type=Path,required=True)
+p.add_argument('--runtime',type=Path,default=Path(__file__).with_name('runtime.py'))
 p.add_argument('--baseline',type=Path,required=True)
 p.add_argument('--output',type=Path,required=True)
 p.add_argument('--stage',type=int,choices=(2,3,4),default=2)

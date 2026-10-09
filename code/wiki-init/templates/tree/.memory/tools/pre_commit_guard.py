@@ -165,7 +165,8 @@ def _transition_violations(parent, child, cwd=None, *, floor_active=False):
         trans += provenance_violations(
             before, after,
             source_exists=lambda rel: _source_entry_exists(cwd, child_sources, rel),
-            commit_exists=lambda sha: _candidate_commit_exists(cwd, sha, ref=child))
+            commit_exists=lambda sha: _candidate_commit_exists(cwd, sha, ref=child),
+            source_read=lambda rel: decode_markdown(_blob(child, rel, cwd=cwd), rel))
         probs.extend(f"history {parent[:8]}..{child[:8]}: {p}" for p in trans)
     return probs
 
@@ -326,7 +327,8 @@ def violations(cwd=None):
     probs += provenance_violations(
         baseline, candidate,
         source_exists=lambda rel: _source_entry_exists(cwd, candidate_sources, rel),
-        commit_exists=lambda sha: _candidate_commit_exists(cwd, sha))
+        commit_exists=lambda sha: _candidate_commit_exists(cwd, sha),
+        source_read=lambda rel: decode_markdown(git_bytes(root, "show", f":{rel}"), rel))
     try:
         sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
         import dual_sync

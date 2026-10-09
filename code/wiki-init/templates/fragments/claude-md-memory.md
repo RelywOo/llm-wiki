@@ -26,6 +26,7 @@ Repo-level manifests/configs (`package.json`, `pyproject.toml`, `.gitignore`, `R
 
 ## Page-type policy (how each durable page changes)
 History is git's job — every old version is recoverable from commits. So append-only is kept ONLY where it also guards audit + blocks silent LLM overwrite:
+- `task-ledger.md` (when used) — canonical, sourced, append-only task events; current views are computed, not edited.
 - `log.md` — STRICTLY append-only. One line per event, never edited.
 - `decisions/*.md` — IMMUTABLE bodies + forward supersession. Never edit a filed decision. To revise one, CREATE a new decision whose frontmatter has `supersedes: <old-id>`; leave the old file untouched. "Active" is COMPUTED, not stored: a decision is superseded iff another decision lists its `id` in `supersedes`.
 - concept pages — LIVING. A new page = `concepts/<slug>.md` (lowercase slug = its `[[wikilink]]` target). Edit/refine in place; every claim keeps its source; git holds the history.
@@ -74,6 +75,20 @@ targets and hard cycles fail. `tasks show` computes `ready_now`; only open tasks
 done hard prerequisites are ready. Cancelled prerequisites do not count as completed.
 Every event has its own reason and source; field provenance is computed. Sequence conflicts
 and duplicate task IDs fail without writing. Do not edit or truncate the ledger directly.
+
+## Evidence and quotations
+Extract exact evidence with `python .memory/tools/structural.py evidence quote <path> <start-line> <end-line>`.
+Save the JSON receipt and run `evidence check <receipt.json>` before citing it. `--event ID`
+on extraction verifies an event label; `check --current` additionally requires an active
+resolved decision source. For inherited scopes, inspect the whole decision lineage and cite
+the ancestor as history plus the current successor; an old quote alone is not current proof.
+Receipts contain exact lines and a source hash. Changed files require fresh receipts.
+Paraphrases and multi-source inferences are labeled as such, never presented as verbatim quotes.
+A successful location/freshness check does not verify meaning: independently review whether
+the excerpt supports the specific claim, scope, date and reason. Report uncertainty explicitly.
+New task events require an exact source quote at capture and commit. Filed excerpts remain
+historical when a source changes; `tasks current` reports current-file match, historical
+excerpt or unavailable source. Do not present a stale excerpt as newly verified evidence.
 
 ## Applying decisions
 Before answering or implementing a mutable rule, run `python .memory/tools/structural.py decision <id>`.

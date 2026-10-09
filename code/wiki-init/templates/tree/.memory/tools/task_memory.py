@@ -10,6 +10,8 @@ import re
 import sys
 import tempfile
 
+from evidence import exact_quote, load_json, source_path
+
 LEDGER = 'task-ledger.md'
 HEADER = '# Task ledger\n\n'
 FIELDS = {'title', 'status', 'owner', 'due', 'priority', 'release_required', 'dependencies'}
@@ -20,18 +22,6 @@ ID = re.compile(r'[A-Za-z][A-Za-z0-9_-]{0,63}\Z')
 def require(condition, message):
     if not condition:
         raise ValueError(message)
-
-
-def source_path(root, value):
-    require(isinstance(value, str) and value, 'source path must be nonempty')
-    path = Path(value)
-    require(not path.is_absolute() and '..' not in path.parts, 'source must be repository-relative')
-    target = root / path
-    require(target.resolve().is_relative_to(root.resolve()), 'source escapes repository')
-    require(not any(p.is_symlink() for p in [target, *target.parents] if p != root.parent),
-            'source symlinks are not supported')
-    require(target.is_file(), f'source missing: {value}')
-    return target
 
 
 def render_event(event):
@@ -46,7 +36,7 @@ def parse(text):
     require(text.startswith(HEADER), 'task ledger header missing')
     events=[]
     for match in re.finditer(r'^```json\n(.*?)\n```$', text, re.M | re.S):
-        events.append(json.loads(match.group(1)))
+        events.append(load_json(match.group(1)))
     try:
         canonical = HEADER + ''.join(render_event(e) for e in events)
     except (KeyError, TypeError) as exc:
@@ -124,7 +114,7 @@ def reduce_events(events):
                     'use link/unlink with a specific pair; replacing known dependencies is forbidden')
         if op=='create': tasks[key]={'id':key,'values':{},'field_events':{},'advisory_dependencies':[],'edge_events':{}}
         task=tasks[key]
-        task['values'].update(json.loads(json.dumps(event['values'])))
+        task['values'].update(load_json(json.dumps(event['values'])))
         for field in event['values']:
             task['field_events'][field]={'seq':number,'source':source,'reason':event['reason']}
         if 'dependencies' in event['values'] and event['values']['dependencies'] is not None:
@@ -165,15 +155,21 @@ def readiness(task, tasks):
             'blocked_by':sorted(blocked),'unknown_dependencies':sorted(unknown)}
 
 
-def validate_transition(before, after, source_exists=None):
+def validate_transition(before, after, source_exists=None, source_read=None):
     """Pure validator shared by live reads, staged commits and history checks."""
     try:
         require(after.startswith(before), 'task ledger is append-only')
         events=parse(after)
         reduce_events(events)
-        if source_exists:
-            for event in events:
+        # Filed excerpts remain historical evidence when a mutable source later changes.
+        # Each newly appended event must be supported in the candidate source tree.
+        additions=events[len(parse(before)):]
+        for event in additions:
+            if source_exists:
                 require(source_exists(event['source']['path']), f"task source missing: {event['source']['path']}")
+            if source_read:
+                require(exact_quote(event['source']['quote'],source_read(event['source']['path'])),
+                        f"task source quote mismatch: event {event['seq']}")
         return []
     except (ValueError, TypeError, KeyError) as exc:
         return [f'task ledger: {exc}']
@@ -197,7 +193,18 @@ def view(text):
             'tracked':bool(text),'complete':bool(text) and all(t['complete'] for t in tasks.values()),'tasks':tasks}
 
 
-def current(text, selected=None, revision=None):
+def source_status(root, source):
+    if root is None: return {'status':'not_checked'}
+    try:
+        path=source_path(root,source['path'])
+        text=path.read_text(encoding='utf-8')
+        return {'status':'matches_current_file' if exact_quote(source['quote'],text) else 'historical_excerpt',
+                'text_digest':hashlib.sha256(text.encode()).hexdigest()}
+    except (ValueError,OSError) as exc:
+        return {'status':'source_unavailable','detail':str(exc)}
+
+
+def current(text, selected=None, revision=None, root=None):
     events=parse(text)
     if revision is not None:
         require(type(revision) is int and 0 <= revision <= len(events), 'revision outside ledger')
@@ -227,7 +234,8 @@ def current(text, selected=None, revision=None):
                                           and t['status'] not in {'done','cancelled'}
                                           and (t['release_required'] is None or t['status'] is None)),
             'tasks':tasks,
-            'sources':{str(n):{'source':events[n-1]['source'],'reason':events[n-1]['reason']} for n in sorted(references)}}
+            'sources':{str(n):{'source':events[n-1]['source'],'reason':events[n-1]['reason'],
+                               'current_file':source_status(root,events[n-1]['source'])} for n in sorted(references)}}
 
 
 def apply(root, event):
@@ -244,7 +252,10 @@ def apply(root, event):
         require(bool(additions),'empty event batch')
         events=parse(old)+additions
         reduce_events(events)
-        for added in additions: source_path(root,added['source']['path'])
+        for added in additions:
+            path=source_path(root,added['source']['path'])
+            require(exact_quote(added['source']['quote'],path.read_text(encoding='utf-8')),
+                    'source quote does not match the source; extract an exact quote')
         candidate=(old or HEADER)+''.join(render_event(added) for added in additions)
         with tempfile.NamedTemporaryFile(mode='w',encoding='utf-8',dir=wiki,prefix='.tasks-',delete=False) as f:
             temporary=Path(f.name)
@@ -264,17 +275,16 @@ def main(root, args):
     usage='tasks apply EVENT.json | current [ID] | show [ID] | at REV [ID] | history [ID] | verify SNAPSHOT.json | check [--complete]'
     require(bool(args),usage)
     if args[0]=='apply' and len(args)==2:
-        print(json.dumps(apply(root,json.loads(Path(args[1]).read_text(encoding='utf-8')))))
+        print(json.dumps(apply(root,load_json(Path(args[1]).read_text(encoding='utf-8')))))
         return
     if args[0] in {'current','at','history','verify'}:
         text=load(root)
-        for event in parse(text): source_path(root,event['source']['path'])
         if args[0]=='current':
             require(len(args)<=2,usage)
-            output=current(text,args[1] if len(args)==2 else None)
+            output=current(text,args[1] if len(args)==2 else None,root=root)
         elif args[0]=='at':
             require(len(args) in (2,3),usage)
-            output=current(text,args[2] if len(args)==3 else None,int(args[1]))
+            output=current(text,args[2] if len(args)==3 else None,int(args[1]),root=root)
         elif args[0]=='history':
             require(len(args)<=2,usage)
             events=parse(text)
@@ -284,17 +294,16 @@ def main(root, args):
             output={'mode':'history','events':events}
         else:
             require(len(args)==2,usage)
-            snapshot=json.loads(Path(args[1]).read_text(encoding='utf-8'))
+            snapshot=load_json(Path(args[1]).read_text(encoding='utf-8'))
             require(isinstance(snapshot,dict),'snapshot must be an object')
             require(snapshot.get('mode')=='current','only a current view can be verified for publication')
-            require(json.dumps(snapshot,sort_keys=True)==json.dumps(current(text,snapshot.get('selection')),sort_keys=True),
+            require(json.dumps(snapshot,sort_keys=True)==json.dumps(current(text,snapshot.get('selection'),root=root),sort_keys=True),
                     'snapshot is stale or altered; regenerate with tasks current')
             output={'verified':True,'revision':snapshot['revision'],'digest':snapshot['digest']}
         print(json.dumps(output,ensure_ascii=False,indent=2))
         return
     require(args[0] in {'show','check'} and len(args)<=2,usage)
     text=load(root)
-    for event in parse(text): source_path(root,event['source']['path'])
     output=view(text)
     if args[0]=='show' and len(args)==2:
         require(args[1] in output['tasks'], 'unknown task ID')

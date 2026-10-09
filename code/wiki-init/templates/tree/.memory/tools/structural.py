@@ -13,6 +13,7 @@ Subcommands:
   checkpoint        one-call /wiki-checkpoint write-side recon: cp delta + dirty tree +
                     computed session/block/next-decision-id + log/commit skeletons
                     (SLIM by design: pages are Read on the write path anyway)
+  evidence ...      extract exact line receipts and verify source, event and decision status
   tasks ...         capture, validate and read canonical task events (tasks for usage)
   decision ID       JSON current decision + full scope-preserving lineage; ambiguity fails
   active            active decision set, newest-first (used by /wiki-resume)
@@ -933,7 +934,8 @@ def guard():
     violations += provenance_violations(
         baseline, current,
         source_exists=lambda rel: _worktree_source_exists(root, rel),
-        commit_exists=lambda sha: _commit_exists(root, sha))
+        commit_exists=lambda sha: _commit_exists(root, sha),
+        source_read=lambda rel: read_markdown(root / rel))
 
     # checkpoint-shape checks (prompt-only rules kept drifting — enforce them here):
     # new log lines only (history never re-judged), STATE schema, index one-liner budget.
@@ -2852,14 +2854,13 @@ def resume_pack():
         print("\n== TASK MEMORY — computed from canonical events ==")
         try:
             task_text = task_memory.load(root)
-            for event in task_memory.parse(task_text):
-                task_memory.source_path(root, event["source"]["path"])
-            task_view = task_memory.current(task_text)
+            task_view = task_memory.current(task_text, root=root)
             print(f"revision {task_view['revision']}; tasks {len(task_view['tasks'])}; "
                   f"ready {len(task_view['ready_now'])}; open release obligations "
                   f"{len(task_view['open_release_obligations'])}; "
                   f"uncertain obligations {len(task_view['uncertain_obligations'])}; "
-                  f"complete={task_view['complete']}")
+                  f"complete={task_view['complete']}; source warnings "
+                  f"{sum(s['current_file']['status'] != 'matches_current_file' for s in task_view['sources'].values())}")
             print("Read tasks current [ID] for values and sources; STATE idle does not cancel obligations.")
         except (ValueError, OSError, TypeError, KeyError) as exc:
             print(f"TASK MEMORY UNRESOLVED: {exc}; do not infer an empty task list.")
@@ -3053,6 +3054,13 @@ def _dispatch(argv):
         _integrity_cli("checkpoint", checkpoint_pack)
     elif cmd == "active":
         _print_active()
+    elif cmd == "evidence":
+        import evidence
+        try:
+            if not evidence.main(WIKI.parents[1], argv[2:], decision_packet):
+                raise CliUsageError("evidence verification failed; see individual errors")
+        except (ValueError, OSError, TypeError, KeyError) as exc:
+            raise CliUsageError(str(exc)) from exc
     elif cmd == "tasks":
         import task_memory
         try:
