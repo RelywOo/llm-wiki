@@ -9,7 +9,9 @@ import time
 
 ROOT = Path(__file__).resolve().parent
 CODEX = Path.home()/'.local/bin/codex'
-def session(workspace, output, prompt, timeout=900, readonly=False):
+def session(workspace, output, prompt, timeout=900, readonly=False, model="gpt-6-luna"):
+    if model not in {'gpt-6-luna','gpt-6.1-sol'}:
+        raise ValueError('evaluation model must be gpt-6-luna or gpt-6.1-sol')
     workspace, output = Path(workspace).resolve(), Path(output).resolve()
     output.mkdir(parents=True, exist_ok=True)
     profile = output/'profile'
@@ -29,7 +31,7 @@ def session(workspace, output, prompt, timeout=900, readonly=False):
     env['PATH']=str(profile/'bin')+':'+env['PATH']
     cmd=['python3',str(ROOT/'isolate.py'),'--workspace',str(workspace),'--profile',str(profile)]
     if readonly: cmd += ['--readonly']
-    cmd += ['--',str(CODEX),'exec','--ignore-user-config','--ignore-rules','--ephemeral','--json','--color','never','--skip-git-repo-check','--dangerously-bypass-approvals-and-sandbox','--dangerously-bypass-hook-trust','-C',str(workspace),'-m','gpt-6-luna','-c','model_reasoning_effort="medium"','-c','web_search="disabled"','-c','features.shell_snapshot=false','-c','features.multi_agent=false','-c','features.memories=false','-c','features.plugins=false','-c','features.apps=false','-']
+    cmd += ['--',str(CODEX),'exec','--ignore-user-config','--ignore-rules','--ephemeral','--json','--color','never','--skip-git-repo-check','--dangerously-bypass-approvals-and-sandbox','--dangerously-bypass-hook-trust','-C',str(workspace),'-m',model,'-c','model_reasoning_effort="medium"','-c','web_search="disabled"','-c','features.shell_snapshot=false','-c','features.multi_agent=false','-c','features.memories=false','-c','features.plugins=false','-c','features.apps=false','-']
     (output/'prompt.txt').write_text(prompt)
     (output/'command.json').write_text(json.dumps(cmd,indent=2))
     start=time.monotonic()

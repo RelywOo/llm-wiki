@@ -192,6 +192,35 @@ a raw research file has no automatic current-decision status. Historical decisio
 remain valid history. An inherited scope needs explicit review of ancestor plus successor,
 not automatic rejection of every historical fact and not blind acceptance of an old rule.
 
+Final delivery uses a manifest instead of model-transcribed receipts:
+
+```json
+{
+  "answer": {"region": "eu-west-1", "explanation": "Production scope."},
+  "sources": [{"path": ".memory/research/events.md", "start_line": 1, "end_line": 1, "event_id": "E001"}]
+}
+```
+
+```sh
+python .memory/tools/structural.py evidence publish manifest.json deliverables/answer.json
+python .memory/tools/structural.py evidence verify deliverables/answer.json
+```
+
+The publisher extracts quotes and source hashes itself. It keeps interpretation in `answer`,
+checks the serialized artifact, flushes a temporary file, and atomically publishes a new
+`deliverables/NAME.json` without overwriting anything. Existing destinations are rejected;
+use a new name for a revision. It rejects symlink destinations and non-deliverable paths.
+The final file contains `schema`, `answer`, `evidence` (each entry has `receipt` and a boolean
+`current` requirement), `semantic_support`, and `artifact_sha256`. The content digest detects
+accidental edits to the answer, receipts or requirements; it is not a signature, trusted
+attestation, or proof of meaning. Share the generated file, not a model-retyped JSON copy.
+`verify` rechecks source freshness and any `current: true` decision requirements, so a newly
+superseded decision invalidates current proof even when its own source bytes are unchanged.
+Checks are point-in-time: subsequent source edits require another verification/publication.
+There is no repository-wide read lock or protection against a writer deliberately recomputing
+the digest. Atomic publication and fsync are tested on Linux; physical power-loss recovery
+and other platforms remain untested. A crash can leave a harmless hidden temporary file.
+
 Every result says `semantic_support: not_checked`. For example, an exact quote saying a
 region is lab-only is real evidence, but it cannot support a claim that production is
 allowed there. Scope, reason and entailment remain a separate agent/reviewer assessment.

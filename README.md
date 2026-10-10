@@ -94,6 +94,9 @@ Exact quotations can be extracted and checked without asking a model to reproduc
 ```sh
 python .memory/tools/structural.py evidence quote .memory/research/events.md 1 2 > receipt.json
 python .memory/tools/structural.py evidence check receipt.json
+# Final delivery: see docs/memory-reliability.md for the manifest format.
+python .memory/tools/structural.py evidence publish manifest.json deliverables/answer.json
+python .memory/tools/structural.py evidence verify deliverables/answer.json
 ```
 
 A valid quotation proves its location and freshness; semantic support requires a separate review.

@@ -31,6 +31,107 @@ class EvidenceTest(unittest.TestCase):
         (self.root/'receipt.json').write_text(json.dumps(receipt))
         return self.cli('evidence','check','receipt.json',*options,ok=ok)
 
+    def test_publish_extracts_receipts_without_model_copying_and_verifies_final_file(self):
+        manifest={'answer':{'region':'eu-west-1','explanation':'Production scope.'},
+                  'sources':[{'path':'.memory/research/events.md','start_line':1,'end_line':1,'event_id':'E001'}]}
+        (self.root/'manifest.json').write_text(json.dumps(manifest))
+        result=json.loads(self.cli('evidence','publish','manifest.json','deliverables/answer.json').stdout)
+        self.assertTrue(result['artifact_verified'])
+        artifact=json.loads((self.root/'deliverables/answer.json').read_text())
+        self.assertEqual(artifact['answer'],manifest['answer'])
+        receipt=artifact['evidence'][0]['receipt']
+        self.assertEqual(receipt['quote'],'E001: Production region is eu-west-1.\n')
+        self.assertEqual(receipt['event_id'],'E001')
+        self.check(receipt)
+        checked=json.loads(self.cli('evidence','verify','deliverables/answer.json').stdout)
+        self.assertTrue(checked['artifact_verified'])
+        self.assertEqual(checked['semantic_support'],'not_checked')
+
+    def test_publish_never_overwrites_existing_artifacts_or_repository_files(self):
+        manifest={'answer':{'region':'eu-west-1'},'sources':[
+            {'path':'.memory/research/events.md','start_line':1,'end_line':1}]}
+        (self.root/'manifest.json').write_text(json.dumps(manifest))
+        original=self.source.read_bytes()
+        for output in ('.memory/research/events.md','manifest.json','../outside.json',str(self.root/'absolute.json')):
+            with self.subTest(output=output):
+                result=self.cli('evidence','publish','manifest.json',output,ok=False)
+                self.assertNotEqual(result.returncode,0)
+                self.assertEqual(self.source.read_bytes(),original)
+        self.cli('evidence','publish','manifest.json','deliverables/answer.json')
+        before=(self.root/'deliverables/answer.json').read_bytes()
+        manifest['answer']['region']='ap-south-1'
+        (self.root/'manifest.json').write_text(json.dumps(manifest))
+        self.assertNotEqual(self.cli('evidence','publish','manifest.json','deliverables/answer.json',ok=False).returncode,0)
+        self.assertEqual((self.root/'deliverables/answer.json').read_bytes(),before)
+
+    def publish_manifest(self, sources=None, answer=None, output='deliverables/answer.json', ok=True):
+        manifest={'answer':answer or {'region':'eu-west-1'},'sources':sources or [
+            {'path':'.memory/research/events.md','start_line':1,'end_line':1,'event_id':'E001'}]}
+        (self.root/'manifest.json').write_text(json.dumps(manifest))
+        return self.cli('evidence','publish','manifest.json',output,ok=ok)
+
+    def test_final_artifact_detects_answer_receipt_and_source_changes(self):
+        self.publish_manifest()
+        target=self.root/'deliverables/answer.json';original=target.read_text()
+        for field in ('answer','quote','hash','extra','semantic'):
+            artifact=json.loads(original)
+            if field=='answer': artifact['answer']['region']='ap-south-1'
+            elif field=='quote': artifact['evidence'][0]['receipt']['quote']='Invented text'
+            elif field=='hash': artifact['evidence'][0]['receipt']['source_sha256']='0'*64
+            elif field=='extra': artifact['evidence'][0]['receipt']['meaning']='Production allowed'
+            else: artifact['semantic_support']='verified'
+            target.write_text(json.dumps(artifact))
+            with self.subTest(field=field):
+                self.assertNotEqual(self.cli('evidence','verify','deliverables/answer.json',ok=False).returncode,0)
+        target.write_text(original)
+        self.source.write_text(self.source.read_text()+'E003: New source revision.\n')
+        result=self.cli('evidence','verify','deliverables/answer.json',ok=False)
+        self.assertNotEqual(result.returncode,0)
+        self.assertIn('source_changed',result.stdout)
+
+    def test_publish_rejects_model_supplied_receipt_fields_and_wrong_events(self):
+        base={'path':'.memory/research/events.md','start_line':1,'end_line':1,'event_id':'E001'}
+        for change in ({'quote':'fake'},{'source_sha256':'0'*64},{'meaning':'approved'},
+                       {'event_id':'E999'},{'current':1},{'current':True},{'start_line':True}):
+            with self.subTest(change=change):
+                self.assertNotEqual(self.publish_manifest([dict(base,**change)],ok=False).returncode,0)
+                self.assertFalse((self.root/'deliverables/answer.json').exists())
+        self.publish_manifest()
+
+    def test_multi_source_current_decision_is_rechecked_after_supersession(self):
+        path='.memory/wiki/decisions/0001-rule.md'
+        (self.root/path).write_text('---\nid: 0001\ndate: 2026-10-10\n---\n# Rule\n## Decision\nProduction region is eu-west-1.\n')
+        sources=[{'path':path,'start_line':7,'end_line':7,'current':True},
+                 {'path':'.memory/research/events.md','start_line':2,'end_line':2,'event_id':'E002'}]
+        self.publish_manifest(sources,{'region':'eu-west-1','explanation':'Лаборатория отдельно.'})
+        self.cli('evidence','verify','deliverables/answer.json')
+        (self.root/'.memory/wiki/decisions/0002-rule.md').write_text(
+            '---\nid: 0002\ndate: 2026-10-11\nsupersedes: 0001\n---\n# Rule\n## Decision\nProduction region is us-east-1.\n')
+        result=self.cli('evidence','verify','deliverables/answer.json',ok=False)
+        self.assertNotEqual(result.returncode,0)
+        self.assertIn('current_decision_not_established: superseded',result.stdout)
+        self.assertNotEqual(self.publish_manifest(sources,output='deliverables/second.json',ok=False).returncode,0)
+        self.assertFalse((self.root/'deliverables/second.json').exists())
+
+    def test_publish_rejects_symlink_outputs_and_competing_publications(self):
+        other=self.root/'other';other.mkdir()
+        (self.root/'deliverables').symlink_to(other,target_is_directory=True)
+        self.assertNotEqual(self.publish_manifest(ok=False).returncode,0)
+        self.assertEqual(list(other.iterdir()),[])
+        (self.root/'deliverables').unlink();(self.root/'deliverables').mkdir()
+        (self.root/'deliverables/answer.json').symlink_to(self.source)
+        original=self.source.read_bytes()
+        self.assertNotEqual(self.publish_manifest(ok=False).returncode,0)
+        self.assertEqual(self.source.read_bytes(),original)
+        (self.root/'deliverables/answer.json').unlink()
+        processes=[subprocess.Popen([sys.executable,'.memory/tools/structural.py','evidence','publish',
+                    'manifest.json','deliverables/answer.json'],cwd=self.root,stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,text=True) for _ in range(4)]
+        for process in processes: process.communicate()
+        self.assertEqual(sum(p.returncode==0 for p in processes),1)
+        self.cli('evidence','verify','deliverables/answer.json')
+        self.assertEqual([p.name for p in (self.root/'deliverables').iterdir()],['answer.json'])
+
     def test_exact_quote_is_extracted_and_fabricated_wording_rejected(self):
         receipt=self.receipt()
         self.assertEqual(receipt['quote'],'E001: Production region is eu-west-1.\n')

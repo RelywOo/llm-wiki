@@ -77,12 +77,23 @@ Every event has its own reason and source; field provenance is computed. Sequenc
 and duplicate task IDs fail without writing. Do not edit or truncate the ledger directly.
 
 ## Evidence and quotations
-Extract exact evidence with `python .memory/tools/structural.py evidence quote <path> <start-line> <end-line>`.
-Save the JSON receipt and run `evidence check <receipt.json>` before citing it. `--event ID`
-on extraction verifies an event label; `check --current` additionally requires an active
-resolved decision source. For inherited scopes, inspect the whole decision lineage and cite
-the ancestor as history plus the current successor; an old quote alone is not current proof.
-Receipts contain exact lines and a source hash. Changed files require fresh receipts.
+For a final answer with verifiable citations, write a manifest containing `answer` (an object
+with your conclusions/explanation) and `sources` (a nonempty list of source selections).
+Each selection has `path`, `start_line`, `end_line`, optionally `event_id` and `current`
+(boolean, default false). Do not supply quote text, hashes or interpretation inside selections.
+Run `python .memory/tools/structural.py evidence publish <manifest.json> deliverables/<new-name>.json`,
+then `python .memory/tools/structural.py evidence verify deliverables/<new-name>.json`.
+Publication extracts receipts, checks the serialized file and saves it without overwriting
+existing files. Link that generated file as the authoritative evidence artifact; do not copy,
+rewrite or extend its receipts or final JSON. If it fails, correct the manifest/sources and
+publish to a new filename. Explain the failure instead of claiming verified delivery.
+The artifact contains your `answer`, generated `evidence` entries (`receipt` and `current`),
+and a content digest. The digest detects accidental edits, not authorship or semantic truth.
+Use `current: true` for a source claimed to be an active resolved decision. For inherited
+scopes, inspect the whole lineage and include the historical ancestor plus a current successor.
+For inspection, `evidence quote <path> <start-line> <end-line> [--event ID]` extracts a receipt;
+`evidence check <receipt.json> [--current]` checks saved receipts. These inspection commands do
+not replace final artifact publication. Changed sources require fresh publication.
 Paraphrases and multi-source inferences are labeled as such, never presented as verbatim quotes.
 A successful location/freshness check does not verify meaning: independently review whether
 the excerpt supports the specific claim, scope, date and reason. Report uncertainty explicitly.

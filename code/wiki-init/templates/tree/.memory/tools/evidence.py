@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import uuid
 from pathlib import Path
 import re
 
@@ -85,9 +87,89 @@ def check(root, receipt, resolver, current=False):
             'semantic_support':'not_checked','errors':errors}
 
 
+def artifact_digest(artifact):
+    payload={key:value for key,value in artifact.items() if key!='artifact_sha256'}
+    return hashlib.sha256(json.dumps(payload,ensure_ascii=False,sort_keys=True,
+                                    separators=(',',':'),allow_nan=False).encode('utf-8')).hexdigest()
+
+
+def verify(root, artifact, resolver):
+    errors=[];results=[]
+    try:
+        require(isinstance(artifact,dict) and set(artifact)==
+                {'schema','answer','evidence','semantic_support','artifact_sha256'},'invalid artifact fields')
+        require(type(artifact['schema']) is int and artifact['schema']==1,'unsupported artifact schema')
+        require(isinstance(artifact['answer'],dict) and bool(artifact['answer']),'answer must be a nonempty object')
+        require(artifact['semantic_support']=='not_checked','semantic support cannot be certified by this tool')
+        require(isinstance(artifact['evidence'],list) and bool(artifact['evidence']),'empty or invalid evidence')
+        if artifact['artifact_sha256']!=artifact_digest(artifact):
+            errors.append('artifact_changed: publish a new artifact instead of editing the output')
+        for item in artifact['evidence']:
+            require(isinstance(item,dict) and set(item)=={'receipt','current'} and
+                    type(item['current']) is bool,'invalid evidence entry')
+            result=check(root,item['receipt'],resolver,item['current']);results.append(result)
+            if not result['location_and_freshness_verified']: errors.extend(result['errors'])
+    except (ValueError,OSError,TypeError,KeyError) as exc:
+        errors.append(str(exc))
+    return {'artifact_verified':not errors,'results':results,
+            'semantic_support':'not_checked','errors':errors}
+
+
+def publish(root, manifest, output, resolver):
+    require(isinstance(manifest,dict) and set(manifest)=={'answer','sources'},'invalid manifest fields')
+    require(isinstance(manifest['sources'],list) and bool(manifest['sources']),'empty or invalid sources')
+    evidence=[]
+    for selection in manifest['sources']:
+        required={'path','start_line','end_line'}
+        require(isinstance(selection,dict) and required<=set(selection) and
+                set(selection)<=required|{'event_id','current'},'invalid source selection fields')
+        current=selection.get('current',False)
+        require(type(current) is bool,'current must be boolean')
+        evidence.append({'receipt':quote(root,selection['path'],selection['start_line'],
+                                         selection['end_line'],selection.get('event_id')),'current':current})
+    artifact={'schema':1,'answer':manifest['answer'],'evidence':evidence,'semantic_support':'not_checked'}
+    artifact['artifact_sha256']=artifact_digest(artifact)
+    serialized=json.dumps(artifact,ensure_ascii=False,indent=2,allow_nan=False)+'\n'
+    checked=verify(root,load_json(serialized),resolver)
+    require(checked['artifact_verified'],'; '.join(checked['errors']))
+    relative=Path(output)
+    require(not relative.is_absolute() and len(relative.parts)==2 and
+            relative.parts[0]=='deliverables' and relative.suffix=='.json',
+            'output must be deliverables/NAME.json')
+    directory=root/'deliverables'
+    directory.mkdir(exist_ok=True)
+    # Pin the directory and reject symlinks. Linking a flushed temporary file
+    # publishes atomically and fails if the destination already exists.
+    directory_fd=os.open(directory,os.O_RDONLY|os.O_DIRECTORY|os.O_NOFOLLOW)
+    temporary='.evidence-'+uuid.uuid4().hex
+    created=False
+    try:
+        fd=os.open(temporary,os.O_RDWR|os.O_CREAT|os.O_EXCL,0o600,dir_fd=directory_fd)
+        created=True
+        with os.fdopen(fd,'w+',encoding='utf-8') as stream:
+            stream.write(serialized);stream.flush();os.fsync(stream.fileno());stream.seek(0)
+            checked=verify(root,load_json(stream.read()),resolver)
+            require(checked['artifact_verified'],'; '.join(checked['errors']))
+        os.link(temporary,relative.name,src_dir_fd=directory_fd,dst_dir_fd=directory_fd,follow_symlinks=False)
+        os.fsync(directory_fd)
+    finally:
+        if created: os.unlink(temporary,dir_fd=directory_fd)
+        os.close(directory_fd)
+    return {'path':output,**checked}
+
+
 def main(root, args, resolver):
-    usage='evidence quote PATH START END [--event ID] | check RECEIPT.json [--current]'
+    usage='evidence quote PATH START END [--event ID] | check RECEIPT.json [--current] | publish MANIFEST.json deliverables/NAME.json | verify ARTIFACT.json'
     require(bool(args),usage)
+    if args[0]=='publish':
+        require(len(args)==3,usage)
+        manifest=load_json(source_path(root,args[1]).read_text(encoding='utf-8'))
+        print(json.dumps(publish(root,manifest,args[2],resolver),ensure_ascii=False,indent=2));return True
+    if args[0]=='verify':
+        require(len(args)==2,usage)
+        artifact=load_json(source_path(root,args[1]).read_text(encoding='utf-8'))
+        checked=verify(root,artifact,resolver)
+        print(json.dumps(checked,ensure_ascii=False,indent=2));return checked['artifact_verified']
     if args[0]=='quote':
         require(len(args) in (4,6),usage)
         require(len(args)==4 or args[4]=='--event',usage)

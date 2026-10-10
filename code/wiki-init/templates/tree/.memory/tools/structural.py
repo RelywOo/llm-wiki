@@ -13,7 +13,7 @@ Subcommands:
   checkpoint        one-call /wiki-checkpoint write-side recon: cp delta + dirty tree +
                     computed session/block/next-decision-id + log/commit skeletons
                     (SLIM by design: pages are Read on the write path anyway)
-  evidence ...      extract exact line receipts and verify source, event and decision status
+  evidence ...      publish/verify final artifacts; quote/check exact source receipts
   tasks ...         capture, validate and read canonical task events (tasks for usage)
   decision ID       JSON current decision + full scope-preserving lineage; ambiguity fails
   active            active decision set, newest-first (used by /wiki-resume)
