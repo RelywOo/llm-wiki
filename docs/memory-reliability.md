@@ -206,7 +206,11 @@ python .memory/tools/structural.py evidence publish manifest.json deliverables/a
 python .memory/tools/structural.py evidence verify deliverables/answer.json
 ```
 
-The publisher extracts quotes and source hashes itself. It keeps interpretation in `answer`,
+The publisher extracts quotes and source hashes itself. If a selection omits `event_id`,
+it derives that metadata only when the quoted text has exactly one distinct ASCII `ID:`
+line label. With multiple labels, select smaller ranges or specify the intended event.
+An explicit label is always checked against the quoted lines. This labels text syntactically;
+it does not infer that the source's claim is true. It keeps interpretation in `answer`,
 checks the serialized artifact, flushes a temporary file, and atomically publishes a new
 `deliverables/NAME.json` without overwriting anything. Existing destinations are rejected;
 use a new name for a revision. It rejects symlink destinations and non-deliverable paths.

@@ -51,6 +51,7 @@ def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('--baseline',type=Path,required=True,help='Pre-delivery-fix source export, with evidence quote/check.')
     parser.add_argument('--output',type=Path,required=True)
+    parser.add_argument('--followup',action='store_true',help='Ten publisher sessions: all six on Luna, plus Luna/Sol repeats of current and inherited.')
     parser.add_argument('--runtime',type=Path,default=Path(__file__).with_name('runtime.py'))
     parser.add_argument('--replay-workspace',type=Path,help='Optional original current-case captured memory.')
     args=parser.parse_args()
@@ -66,9 +67,14 @@ def main():
     for index,case in enumerate(CASES):
         arms=[('manual','gpt-6-luna',1),('publisher','gpt-6-luna',1),
               ('publisher','gpt-6-luna',2),('publisher','gpt-6.1-sol',1)]
+        if args.followup:
+            arms=[('publisher','gpt-6-luna',1)]
+            if case['name'] in {'current','inherited'}:
+                arms += [('publisher','gpt-6-luna',2),('publisher','gpt-6.1-sol',1)]
         if index%2: arms.reverse()
         schedule.extend((case,arm,model,repeat) for arm,model,repeat in arms)
     protocol={'cases':CASES,'schedule':[(c['name'],a,m,r) for c,a,m,r in schedule],
+              'followup':args.followup,
               'rules':['No reruns or normalization; every attempted session is retained.',
                        'Exact answer field types/values; nonempty explanation separately.',
                        'All required event labels with exact source receipts; at least two excerpts.',
@@ -104,7 +110,7 @@ def main():
         before=digest_memory(workspace)
         prompt=('Answer from durable memory in this fresh session. '+case['question']+
                 ' Include exactly the requested fields and a nonempty explanation string in the answer object. '
-                'Cite at least two excerpts, including event labels '+', '.join(case['events'])+'. ')
+                'Cite at least two excerpts, including event_id metadata for labels '+', '.join(case['events'])+'. ')
         if arm=='publisher':
             prompt+=('Use the installed final evidence publication workflow to produce deliverables/answer.json. '
                      'Verify that final file and link it in your final response; do not retype its contents.')

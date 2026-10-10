@@ -132,6 +132,21 @@ class EvidenceTest(unittest.TestCase):
         self.cli('evidence','verify','deliverables/answer.json')
         self.assertEqual([p.name for p in (self.root/'deliverables').iterdir()],['answer.json'])
 
+    def test_publish_derives_an_unambiguous_event_label_when_selection_omits_it(self):
+        self.publish_manifest([{'path':'.memory/research/events.md','start_line':1,'end_line':1}])
+        artifact=json.loads((self.root/'deliverables/answer.json').read_text())
+        self.assertEqual(artifact['evidence'][0]['receipt'].get('event_id'),'E001')
+        self.cli('evidence','verify','deliverables/answer.json')
+        # A range containing two different labels must not invent a single event identity.
+        self.publish_manifest([{'path':'.memory/research/events.md','start_line':1,'end_line':2}],
+                              output='deliverables/multiple.json')
+        multiple=json.loads((self.root/'deliverables/multiple.json').read_text())
+        self.assertNotIn('event_id',multiple['evidence'][0]['receipt'])
+        self.publish_manifest([{'path':'.memory/research/events.md','start_line':1,'end_line':2,'event_id':'E002'}],
+                              output='deliverables/explicit.json')
+        explicit=json.loads((self.root/'deliverables/explicit.json').read_text())
+        self.assertEqual(explicit['evidence'][0]['receipt']['event_id'],'E002')
+
     def test_exact_quote_is_extracted_and_fabricated_wording_rejected(self):
         receipt=self.receipt()
         self.assertEqual(receipt['quote'],'E001: Production region is eu-west-1.\n')

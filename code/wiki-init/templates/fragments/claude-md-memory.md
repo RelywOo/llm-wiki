@@ -80,7 +80,10 @@ and duplicate task IDs fail without writing. Do not edit or truncate the ledger 
 For a final answer with verifiable citations, write a manifest containing `answer` (an object
 with your conclusions/explanation) and `sources` (a nonempty list of source selections).
 Each selection has `path`, `start_line`, `end_line`, optionally `event_id` and `current`
-(boolean, default false). Do not supply quote text, hashes or interpretation inside selections.
+(boolean, default false). For labeled events, provide `event_id` explicitly; if omitted,
+publication derives it only when the selected text has exactly one distinct ASCII `ID:`
+line label. A range with multiple labels needs an explicit ID or separate selections.
+Do not supply quote text, hashes or interpretation inside selections.
 Run `python .memory/tools/structural.py evidence publish <manifest.json> deliverables/<new-name>.json`,
 then `python .memory/tools/structural.py evidence verify deliverables/<new-name>.json`.
 Publication extracts receipts, checks the serialized file and saves it without overwriting

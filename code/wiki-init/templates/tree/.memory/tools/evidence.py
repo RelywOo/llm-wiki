@@ -125,8 +125,12 @@ def publish(root, manifest, output, resolver):
                 set(selection)<=required|{'event_id','current'},'invalid source selection fields')
         current=selection.get('current',False)
         require(type(current) is bool,'current must be boolean')
-        evidence.append({'receipt':quote(root,selection['path'],selection['start_line'],
-                                         selection['end_line'],selection.get('event_id')),'current':current})
+        receipt=quote(root,selection['path'],selection['start_line'],
+                      selection['end_line'],selection.get('event_id'))
+        if 'event_id' not in receipt:
+            labels=set(re.findall(r'(?m)^\s*([A-Za-z][A-Za-z0-9_-]*):',receipt['quote']))
+            if len(labels)==1: receipt['event_id']=labels.pop()
+        evidence.append({'receipt':receipt,'current':current})
     artifact={'schema':1,'answer':manifest['answer'],'evidence':evidence,'semantic_support':'not_checked'}
     artifact['artifact_sha256']=artifact_digest(artifact)
     serialized=json.dumps(artifact,ensure_ascii=False,indent=2,allow_nan=False)+'\n'
