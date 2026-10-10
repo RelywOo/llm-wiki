@@ -54,6 +54,11 @@ def main():
     parser.add_argument('--runtime',type=Path,default=Path(__file__).with_name('runtime.py'))
     parser.add_argument('--replay-workspace',type=Path,help='Optional original current-case captured memory.')
     args=parser.parse_args()
+    if args.replay_workspace:
+        replay_source=(args.replay_workspace/'.memory/research/events.md').read_bytes()
+        expected_source=next(case['source'] for case in CASES if case['name']=='current').encode('utf-8')
+        if replay_source!=expected_source:
+            parser.error('replay event source does not match the fixed current-case oracle')
     spec=importlib.util.spec_from_file_location('delivery_runtime',args.runtime)
     runtime=importlib.util.module_from_spec(spec);spec.loader.exec_module(runtime)
     args.output.mkdir(parents=True,exist_ok=False)
@@ -87,8 +92,9 @@ def main():
             (workspace/directory).mkdir(parents=True,exist_ok=True)
         source_repo=REPO if arm=='publisher' else args.baseline
         shutil.copytree(source_repo/'code/wiki-init/templates/tree/.memory/tools',workspace/'.memory/tools',ignore=shutil.ignore_patterns('__pycache__'))
-        (workspace/'.memory/research/events.md').write_bytes(case['source'].encode('utf-8'))
-        (workspace/'.memory/research/neighbor.md').write_text('E999: Unrelated project with no approved schedule.\n')
+        if not (case['name']=='current' and args.replay_workspace):
+            (workspace/'.memory/research/events.md').write_bytes(case['source'].encode('utf-8'))
+            (workspace/'.memory/research/neighbor.md').write_text('E999: Unrelated project with no approved schedule.\n')
         for name,body in case.get('decisions',{}).items():
             (workspace/'.memory/wiki/decisions'/name).write_text(body)
         instructions=(source_repo/'code/wiki-init/templates/fragments/claude-md-memory.md').read_text()

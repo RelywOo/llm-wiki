@@ -8,6 +8,23 @@ import unittest
 
 
 class EvidenceRunnerTest(unittest.TestCase):
+    def test_delivery_replay_rejects_a_different_event_log_before_model_calls(self):
+        repo=Path(__file__).resolve().parents[2]
+        with tempfile.TemporaryDirectory(prefix='wiki-replay-') as temporary:
+            root=Path(temporary);replay=root/'replay'
+            (replay/'.memory/research').mkdir(parents=True)
+            (replay/'.memory/research/events.md').write_text('E001: Different history.\n')
+            (replay/'.memory/tools').mkdir()
+            runtime=root/'runtime.py'
+            runtime.write_text('def session(*args, **kwargs):\n    raise RuntimeError("MODEL_WAS_CALLED")\n')
+            result=subprocess.run([sys.executable,str(repo/'code/reliability-evaluation/run_evidence_delivery.py'),
+                '--baseline',str(repo),'--runtime',str(runtime),'--replay-workspace',str(replay),
+                '--output',str(root/'results')],capture_output=True,text=True)
+            self.assertNotEqual(result.returncode,0)
+            self.assertIn('replay event source does not match the fixed current-case oracle',result.stdout+result.stderr)
+            self.assertNotIn('MODEL_WAS_CALLED',result.stdout+result.stderr)
+            self.assertFalse((root/'results').exists())
+
     def test_numeric_verdicts_cannot_pass_as_boolean_answers(self):
         repo = Path(__file__).resolve().parents[2]
         with tempfile.TemporaryDirectory(prefix='wiki-runner-types-') as temporary:
