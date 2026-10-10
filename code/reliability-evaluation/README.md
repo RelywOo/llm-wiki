@@ -78,3 +78,13 @@ sessions additionally require final-file verification and the current-successor 
 applicable. No result is normalized or repaired after a model turn. Any publisher failure
 keeps the delivery acceptance gate on hold. Manual controls characterize the prior workflow;
 small samples do not establish an error rate or accuracy superiority.
+
+A separate `--followup` schedule runs ten publisher sessions: one Luna session for every
+case, plus additional Luna and Sol sessions for `current` and `inherited`. It was introduced
+after the first delivery series exposed omitted `event_id` metadata. The prompt explicitly
+requires that metadata, and the publisher derives it from an unambiguous source label when
+omitted. This is a new series in a new directory, never a replacement for failed results.
+
+The earlier `run_evidence.py` and `smoke.py` scripts retain their historical manual-receipt
+output contracts. Use `run_evidence_delivery.py` for acceptance of final artifact delivery;
+the older scripts are diagnostic comparisons, not the publisher's current acceptance gate.

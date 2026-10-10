@@ -328,3 +328,57 @@ conversation and independent Sol reviewers and is not subscription-quota usage.
 Concurrent local/additional checks prevent a controlled speed comparison. The
 small synthetic corpus cannot establish universal model reliability or accuracy
 superiority; runtime hooks/checkpoints were tested separately from subject sessions.
+
+## Final evidence delivery acceptance (2026-10-10)
+
+The pending delivery change is implemented in `4612b3f`, with replay validation in
+`0ccfea2` and deterministic event-label extraction in `03689f4`. Receipts are now
+assembled and verified in the publisher; the agent delivers the generated artifact
+instead of transcribing receipt JSON. The previously corrupted SHA remains rejected.
+
+The first focused series has 24 fresh recovery sessions: 12 publisher Luna, six
+publisher Sol and six pre-fix manual-receipt Luna controls. All facts and all 36
+publisher receipts pass. Strict publisher scores are Luna **10/12**, Sol **6/6**;
+manual controls pass **6/6**. Two Luna sessions omit `event_id` metadata while quoting
+the correct labeled events. The original prompt required event labels but did not
+explicitly distinguish metadata from labels in quote text, whereas the scorer required
+metadata. Those failures remain failures; the initial delivery-series decision is HOLD.
+
+The subsequent fix derives an unambiguous label from selected source text. A separate,
+predefined follow-up explicitly states the metadata requirement and runs all six cases
+on Luna, with additional Luna and Sol repetitions of the two affected cases. Final
+results are **8/8 Luna and 2/2 Sol**, without answer repair or normalization. The
+publisher also mechanically replays all 18 initial source selections successfully,
+including both failures, while preserving original artifacts. These mechanical replays
+reuse original answers and are not new model-quality measurements.
+
+Final discovery runs **68 tests: 63 pass and 5 existing user-systemd tests skip**.
+Distribution and updater selfchecks pass. Public CLI coverage includes final-file
+mutation, source changes, decision supersession, malformed selections, symlinks,
+no-overwrite publication, competing writers and ambiguous labels. Independent Standards
+and Spec reviews have no open findings. A reviewer-found replay-input overwrite was
+fixed with a regression before the final follow-up. The first series used its frozen
+runner; its supplied event source was audited as byte-identical to the fixed fixture,
+and its neutral neighbor addition is disclosed rather than claiming directory identity.
+
+**Recommendation: accept the five-priority branch under the documented workflows.**
+The previous four priorities retain their earlier acceptance evidence and pass the
+repeated regression suite. The final evidence-delivery blocker is closed for the tested
+contract. Tools and instructions must be updated together, and generated files must be
+delivered without model retyping. This does not certify semantic support, prove universal
+model reliability, or establish an accuracy improvement over baseline. Windows/macOS,
+physical power-loss recovery and the skipped systemd checks remain untested. The branch
+has not been merged or deployed to existing projects.
+
+This follow-up contains **34 real subject sessions: 26 Luna and eight Sol**, all at
+medium reasoning and all completed. Actual command logs confirm publisher/verification
+use in all 28 publisher sessions. Existing ChatGPT authorization was used; no Astra or
+paid API fallback. Total measured subject usage is **3,770,749 input tokens**
+(**3,261,568 cached**, **509,181 uncached**) and **38,530 output tokens**. Summed subject
+time is about **15.7 minutes**. These figures exclude the controlling conversation and
+independent reviewers; they are not subscription-quota percentages or controlled speed
+comparisons. Small synthetic samples do not estimate real-world failure rates.
+
+Reproduce with the final-delivery runner in the evaluation guide; `--followup` selects
+the ten-session final schedule. Initial and follow-up protocols, raw outputs, failed
+results, mechanical replays, checks and resource measurements were retained separately.
