@@ -26,6 +26,7 @@ Repo-level manifests/configs (`package.json`, `pyproject.toml`, `.gitignore`, `R
 
 ## Page-type policy (how each durable page changes)
 History is git's job — every old version is recoverable from commits. So append-only is kept ONLY where it also guards audit + blocks silent LLM overwrite:
+- `task-ledger.md` (when used) — canonical, sourced, append-only task events; current views are computed, not edited.
 - `log.md` — STRICTLY append-only. One line per event, never edited.
 - `decisions/*.md` — IMMUTABLE bodies + forward supersession. Never edit a filed decision. To revise one, CREATE a new decision whose frontmatter has `supersedes: <old-id>`; leave the old file untouched. "Active" is COMPUTED, not stored: a decision is superseded iff another decision lists its `id` in `supersedes`.
 - concept pages — LIVING. A new page = `concepts/<slug>.md` (lowercase slug = its `[[wikilink]]` target). Edit/refine in place; every claim keeps its source; git holds the history.
@@ -46,6 +47,69 @@ Freshness is COMPUTED from git, never stored: last-touch = `git log -1 --format=
 Deterministic regex/FTS pass over `.memory/wiki/` — prefer it over ad-hoc grep and full-page reads for structural AND content questions. Subcommands: `resume`, `active`, `section`, `toc`, `search`, `lint`, `pack-budget`, `wanted`, `flags`, `last-done`, `guard`, `doctor`, `freshness`, `help`, `selfcheck`.
 One-line docs per subcommand on demand: `python .memory/tools/structural.py help`.
 Most used: `search "<terms>"` for content lookups (stemmed FTS5 top-5 snippets — finds word forms grep misses); `section <file> "<## header>"` to load ONE section instead of a full page (`toc <file>` lists the headers); `active` for the active decision set.
+
+## Tasks and obligations
+Capture tracked tasks with `python .memory/tools/structural.py tasks apply <event.json>`.
+The canonical, append-only `.memory/wiki/task-ledger.md` owns task values; prose and STATE
+link to it instead of keeping another editable task register. Read `tasks current [ID]` for a
+compact computed view with revision/digest and deduplicated field sources; `tasks show [ID]`
+provides expanded provenance. Use `tasks history [ID]` or `tasks at REV [ID]` for history.
+Regenerate current views after changes. Before publishing a saved JSON view, run
+`tasks verify <snapshot.json>`: altered or stale views fail. Current values in prose are
+not another authority. Do not derive current task state from old tables plus later prose.
+Use `tasks check --complete` before presenting a complete task inventory. Missing information
+is explicit `null` plus `unknown_fields`, never `false`, an empty list, or a guessed default.
+An absent ledger is untracked work, not proof there are no obligations. Migrate legacy prose
+only by reviewing original sources; do not infer a missing release flag from silence.
+
+Event JSON: `seq` (next integer), `id`, `op` (`create` or `update`), `values`, `reason`,
+`source` (`path` and `quote`). Creation requires all fields: `title`, `status` (open,
+in_progress, blocked, done, cancelled), `owner`, `due` (YYYY-MM-DD), `priority` (0..4),
+`release_required` (boolean), `dependencies` (direct hard prerequisite IDs). Explicit `null`
+is allowed for unknown fields. Updates specify only changed fields and retain all others.
+Known dependencies change only through `op: link` or `op: unlink`, with `values` containing
+`target` (prerequisite ID) and `kind` (`hard` or advisory `soft`). Never replace a known
+prerequisite list or remove a direct edge because an indirect path exists. A JSON array of
+events is applied atomically, allowing creation of a complete graph in one batch. Unknown
+targets and hard cycles fail. `tasks show` computes `ready_now`; only open tasks with known,
+done hard prerequisites are ready. Cancelled prerequisites do not count as completed.
+Every event has its own reason and source; field provenance is computed. Sequence conflicts
+and duplicate task IDs fail without writing. Do not edit or truncate the ledger directly.
+
+## Evidence and quotations
+For a final answer with verifiable citations, write a manifest containing `answer` (an object
+with your conclusions/explanation) and `sources` (a nonempty list of source selections).
+Each selection has `path`, `start_line`, `end_line`, optionally `event_id` and `current`
+(boolean, default false). For labeled events, provide `event_id` explicitly; if omitted,
+publication derives it only when the selected text has exactly one distinct ASCII `ID:`
+line label. A range with multiple labels needs an explicit ID or separate selections.
+Do not supply quote text, hashes or interpretation inside selections.
+Run `python .memory/tools/structural.py evidence publish <manifest.json> deliverables/<new-name>.json`,
+then `python .memory/tools/structural.py evidence verify deliverables/<new-name>.json`.
+Publication extracts receipts, checks the serialized file and saves it without overwriting
+existing files. Link that generated file as the authoritative evidence artifact; do not copy,
+rewrite or extend its receipts or final JSON. If it fails, correct the manifest/sources and
+publish to a new filename. Explain the failure instead of claiming verified delivery.
+The artifact contains your `answer`, generated `evidence` entries (`receipt` and `current`),
+and a content digest. The digest detects accidental edits, not authorship or semantic truth.
+Use `current: true` for a source claimed to be an active resolved decision. For inherited
+scopes, inspect the whole lineage and include the historical ancestor plus a current successor.
+For inspection, `evidence quote <path> <start-line> <end-line> [--event ID]` extracts a receipt;
+`evidence check <receipt.json> [--current]` checks saved receipts. These inspection commands do
+not replace final artifact publication. Changed sources require fresh publication.
+Paraphrases and multi-source inferences are labeled as such, never presented as verbatim quotes.
+A successful location/freshness check does not verify meaning: independently review whether
+the excerpt supports the specific claim, scope, date and reason. Report uncertainty explicitly.
+New task events require an exact source quote at capture and commit. Filed excerpts remain
+historical when a source changes; `tasks current` reports current-file match, historical
+excerpt or unavailable source. Do not present a stale excerpt as newly verified evidence.
+
+## Applying decisions
+Before answering or implementing a mutable rule, run `python .memory/tools/structural.py decision <id>`.
+Use its current successor and apply the returned lineage oldest to newest by scope; a partial
+replacement preserves scopes it did not change. Search snippets and raw Markdown are discovery
+and history, not proof that a rule is current. An ambiguous graph or unclear scope is unresolved:
+report the gap instead of choosing the largest ID. Do not rewrite old decision files.
 
 ## Wiki write-guard
 A PreToolUse hook (`.memory/tools/wiki_guard.py`) DENIES edits to filed (committed) `decisions/*.md` and any non-append change to `log.md`; `structural.py guard` re-checks at checkpoint (catches Bash/sed edits the hook can't see). Denied? Don't fight the hook: file a new decision with `supersedes:`, or append to the log instead.

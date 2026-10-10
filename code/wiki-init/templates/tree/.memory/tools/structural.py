@@ -13,6 +13,9 @@ Subcommands:
   checkpoint        one-call /wiki-checkpoint write-side recon: cp delta + dirty tree +
                     computed session/block/next-decision-id + log/commit skeletons
                     (SLIM by design: pages are Read on the write path anyway)
+  evidence ...      publish/verify final artifacts; quote/check exact source receipts
+  tasks ...         capture, validate and read canonical task events (tasks for usage)
+  decision ID       JSON current decision + full scope-preserving lineage; ambiguity fails
   active            active decision set, newest-first (used by /wiki-resume)
   section F "H"     print the "## H..." section of file F through the next "## " or EOF
   toc F             list file F's "## " headers in order (the cheap nav-aid TOC, ~0 tokens)
@@ -49,6 +52,7 @@ Subcommands:
 """
 from __future__ import annotations
 
+import json
 import re
 import sqlite3
 import subprocess
@@ -79,8 +83,10 @@ WIKILINK = re.compile(r"\[\[([^\]]+)\]\]")
 # meta-doc placeholders: [[slug]]/[[owner]]-style tokens used when a page DOCUMENTS the
 # link syntax itself (decision 0017 does) — never real pages, never broken links
 PLACEHOLDER_SLUGS = frozenset({"slug", "owner", "wikilink", "link"})
-SUPERSEDES = re.compile(r"^supersedes:\s*(\d{4})\s*$", re.M)
-SUPERSEDES_KEY = re.compile(r"^supersedes\s*:", re.M)
+SUPERSEDES = re.compile(r"^supersedes:[ \t]*(\d{4})[ \t]*$", re.M)
+# Recognize malformed spellings too, so they fail validation instead of silently
+# removing an edge from the current-decision graph. Only SUPERSEDES executes it.
+SUPERSEDES_KEY = re.compile(r"^[ \t]*[\"']?supersedes[\"']?[ \t]*:", re.M | re.I)
 FRONTMATTER = re.compile(r"\A---\n(.*?)\n---", re.S)
 CONTRADICTED = re.compile(r"^contradicted:\s*(\S+)\s*$", re.M)
 CONTRADICTED_KEY = re.compile(r"^contradicted\s*:", re.M)
@@ -269,6 +275,66 @@ def extract(wiki: Path = WIKI):
 
     active = sorted(i for i in decisions if i not in superseded)
     return edges, warnings, sorted(superseded), active
+
+
+def decision_packet(identifier: str, wiki: Path = WIKI) -> dict:
+    """Resolve a decision in either direction without inferring partial replacements.
+
+    Full lineage remains available: an unchanged scope may be defined by an ancestor.
+    Branches are ambiguous, never arbitrarily reduced to the largest/newest ID.
+    """
+    files = sorted((wiki / "decisions").glob("*.md"))
+    problems = _doctor_decisions({p.name: read_markdown(p) for p in files})
+    if problems:
+        raise ValueError("invalid decision graph: " + "; ".join(problems))
+    by_id = {p.stem[:4]: p for p in files}
+    did = Path(identifier).name.split("-", 1)[0].removesuffix(".md")
+    if did not in by_id:
+        raise ValueError(f"unknown decision: {identifier}")
+    parent, children = {}, {}
+    for key, path in by_id.items():
+        fm = FRONTMATTER.match(_norm_eol(read_markdown(path)))
+        found = SUPERSEDES.search(fm.group(1)) if fm else None
+        if found:
+            old = found.group(1)
+            parent[key] = old
+            children.setdefault(old, []).append(key)
+    first = did
+    while first in parent:
+        first = parent[first]
+    chain, node = [], first
+    while True:
+        chain.append(node)
+        next_ids = children.get(node, [])
+        if len(next_ids) > 1:
+            raise ValueError(f"ambiguous successors of {node}: {', '.join(next_ids)}; "
+                             "review scopes explicitly before applying a rule")
+        if not next_ids:
+            break
+        node = next_ids[0]
+    return {
+        "requested": did, "current": node,
+        "status": "current" if did == node else "superseded",
+        "instruction": "Apply changes oldest to newest by scope. Preserve unchanged scopes. "
+                       "Do not treat historical values as current. If scope is unclear, report unknown.",
+        "lineage": [{"id": key, "path": ".memory/wiki/" + by_id[key].relative_to(wiki).as_posix(),
+                     "status": "current" if key == node else "superseded",
+                     "text": read_markdown(by_id[key])} for key in chain],
+    }
+
+
+def decision_read_notice(path: Path, wiki: Path = WIKI) -> str:
+    if path.resolve().parent != (wiki / "decisions").resolve():
+        return ""
+    try:
+        packet = decision_packet(path.name, wiki)
+    except ValueError as exc:
+        return f"DECISION UNRESOLVED: {exc}"
+    if packet["status"] == "superseded":
+        return (f"SUPERSEDED: {packet['requested']} is historical; current successor "
+                f"{packet['current']}. Before applying: structural.py decision {packet['requested']}")
+    return (f"CURRENT decision {packet['current']}; resolve inherited scopes with "
+            f"structural.py decision {packet['current']}")
 
 
 def section(text: str, header_prefix: str) -> str | None:
@@ -732,15 +798,16 @@ def _newly_filed_decision_compare(
     return violations
 
 
-def _head_decision_snapshot(root: Path) -> dict[str, str]:
-    """Read Markdown decisions from HEAD; an unborn repository has an empty snapshot."""
+def _head_filed_snapshot(root: Path) -> dict[str, str]:
+    """Read filed decisions and task events from HEAD, including mid-session commits."""
     probe = _run_git(root, "rev-parse", "--verify", "HEAD^{commit}",
                      allowed_rc=frozenset({0, 128}))
     if probe.returncode != 0:
         return {}
     out = {}
     raw_names = _git_bytes(
-        root, "ls-tree", "-r", "--name-only", "-z", "HEAD", "--", ".memory/wiki/decisions")
+        root, "ls-tree", "-r", "--name-only", "-z", "HEAD", "--",
+        ".memory/wiki/decisions", ".memory/wiki/task-ledger.md")
     for raw_name in raw_names.split(b"\0"):
         if not raw_name:
             continue
@@ -857,20 +924,27 @@ def guard():
                     root, "show", f"{sha}:{name}", strip=False)
     current = {f.relative_to(WIKI).as_posix(): read_markdown(f)
                for f in WIKI.rglob("*.md") if not f.is_symlink()}
+    filed = _head_filed_snapshot(root)
     violations = (_history_integrity_violations(root)
                   + _worktree_wiki_type_violations(WIKI)
                   + _newly_filed_decision_compare(
-                      _head_decision_snapshot(root), baseline, current,
+                      filed, baseline, current,
                       _index_decision_snapshot(root)))
     health_fail, health_warn, _health_ok = enforcement_health(root, full=False)
     violations += [f"enforcement health: {x}" for x in health_fail]
     compare_violations, warnings = _guard_compare(baseline, current)
     warnings += [f"enforcement health: {x}" for x in health_warn]
     violations += compare_violations
+    # Task events become historical evidence at their first commit, which may
+    # precede the next STATE checkpoint. History audit still validates every
+    # committed transition; the live check validates only the unfiled suffix.
+    provenance_baseline = dict(baseline)
+    provenance_baseline['task-ledger.md'] = filed.get('task-ledger.md', '')
     violations += provenance_violations(
-        baseline, current,
+        provenance_baseline, current,
         source_exists=lambda rel: _worktree_source_exists(root, rel),
-        commit_exists=lambda sha: _commit_exists(root, sha))
+        commit_exists=lambda sha: _commit_exists(root, sha),
+        source_read=lambda rel: read_markdown(root / rel))
 
     # checkpoint-shape checks (prompt-only rules kept drifting — enforce them here):
     # new log lines only (history never re-judged), STATE schema, index one-liner budget.
@@ -2784,6 +2858,22 @@ def resume_pack():
         print("Refusing to compute active decisions from an untrusted wiki; run `structural.py guard`.")
         return
 
+    if (WIKI / "task-ledger.md").exists():
+        import task_memory
+        print("\n== TASK MEMORY — computed from canonical events ==")
+        try:
+            task_text = task_memory.load(root)
+            task_view = task_memory.current(task_text, root=root)
+            print(f"revision {task_view['revision']}; tasks {len(task_view['tasks'])}; "
+                  f"ready {len(task_view['ready_now'])}; open release obligations "
+                  f"{len(task_view['open_release_obligations'])}; "
+                  f"uncertain obligations {len(task_view['uncertain_obligations'])}; "
+                  f"complete={task_view['complete']}; source warnings "
+                  f"{sum(s['current_file']['status'] != 'matches_current_file' for s in task_view['sources'].values())}")
+            print("Read tasks current [ID] for values and sources; STATE idle does not cancel obligations.")
+        except (ValueError, OSError, TypeError, KeyError) as exc:
+            print(f"TASK MEMORY UNRESOLVED: {exc}; do not infer an empty task list.")
+
     state_path = root / ".memory" / "STATE.md"
     state = read_markdown(state_path) if state_path.exists() else ""
 
@@ -2973,6 +3063,26 @@ def _dispatch(argv):
         _integrity_cli("checkpoint", checkpoint_pack)
     elif cmd == "active":
         _print_active()
+    elif cmd == "evidence":
+        import evidence
+        try:
+            if not evidence.main(WIKI.parents[1], argv[2:], decision_packet):
+                raise CliUsageError("evidence verification failed; see individual errors")
+        except (ValueError, OSError, TypeError, KeyError) as exc:
+            raise CliUsageError(str(exc)) from exc
+    elif cmd == "tasks":
+        import task_memory
+        try:
+            task_memory.main(WIKI.parents[1], argv[2:])
+        except (ValueError, OSError, TypeError, KeyError) as exc:
+            raise CliUsageError(str(exc)) from exc
+    elif cmd == "decision":
+        if len(argv) != 3:
+            raise CliUsageError("usage: structural.py decision <id or decision path>")
+        try:
+            print(json.dumps(decision_packet(argv[2]), ensure_ascii=False, indent=2))
+        except ValueError as exc:
+            raise CliUsageError(str(exc)) from exc
     elif cmd == "section":
         # `section <file> "<header>"` — print one "## " section through the next "## " or
         # EOF. 0-token slice so resume/checkpoint full-load but only consume named sections.
@@ -2981,6 +3091,11 @@ def _dispatch(argv):
         path = _resolve_page(argv[2])
         if path is None:
             raise CliUsageError(f"section: file not found: {argv[2]}")
+        notice = decision_read_notice(path)
+        if notice:
+            print(notice)
+            if notice.startswith("DECISION UNRESOLVED"):
+                raise CliUsageError("resolve the decision graph before reading a rule")
         block = section(read_markdown(path), argv[3])
         print(block if block is not None
               else f'section: no "## {argv[3].lstrip("# ").strip()}*" header in {argv[2]}')
