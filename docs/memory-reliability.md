@@ -382,3 +382,25 @@ comparisons. Small synthetic samples do not estimate real-world failure rates.
 Reproduce with the final-delivery runner in the evaluation guide; `--followup` selects
 the ten-session final schedule. Initial and follow-up protocols, raw outputs, failed
 results, mechanical replays, checks and resource measurements were retained separately.
+
+
+## Integration approval (2026-10-10)
+
+The project owner accepted the five developed priorities and authorized merging the
+reliability branch into `main` and publishing it to the upstream repository. The accepted
+implementation is `03689f4`, with final acceptance documentation in `794cb94`.
+
+| Development priority | Status | Delivered mechanism |
+|---|---|---|
+| 1. Current decisions | Closed | Full supersession resolution, scope-preserving lineage and fail-closed metadata validation |
+| 2. Complete task fields | Closed | Canonical sourced event ledger, required fields and explicit unknown values |
+| 3. Direct dependencies | Closed | Explicit hard/soft edges and computed readiness |
+| 4. Current task state | Closed | Derived current views, separate history and revision verification |
+| 5. Evidence delivery | Closed under the documented workflow | Programmatic quote/hash/label extraction, final artifact publication and verification |
+
+Closure refers to these five development priorities, not the first five rows of an earlier
+research planning table. A general runtime-enforced read-only mode and checkpoint workflow
+simplification were separate research proposals and remain open. Exact citations do not
+certify semantic support. The final 8/8 Luna and 2/2 Sol sessions, 63 passing tests with five
+systemd skips, distribution/updater checks, and independent reviews support this acceptance.
+Earlier failed results and the documented limitations remain part of the evidence.
