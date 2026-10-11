@@ -140,7 +140,7 @@ The exact old standard English-only language rule is upgraded to allow explicit 
 
 Foreground operation is the default. The distribution also includes guarded background checkpoint packages and a persistent watchdog. Activating the watchdog with `--watchdog` requires an explicitly enabled Codex integration and a working Linux user systemd session. See the bundled [background procedure](code/wiki-init/templates/tree/.memory/checkpoint-background.md).
 
-Jev inventory is a separate opt-in Typesafe API integration. It requires your own configuration and credentials, can send the selected source material to the API, and is not necessary for ordinary foreground memory use. No credentials are bundled. See the [inventory procedure](code/wiki-init/templates/tree/.memory/checkpoint-inventory.md).
+Jev inventory is a separate opt-in Typesafe API integration. It uses the accepted combined pipeline with full selected source context. It requires your own configuration and credentials, can send the selected source material to the API, and is not necessary for ordinary foreground memory use. No credentials are bundled. See the [inventory procedure](code/wiki-init/templates/tree/.memory/checkpoint-inventory.md).
 
 ## Development and checks
 

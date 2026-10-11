@@ -79,7 +79,7 @@ class DistributionTests(unittest.TestCase):
         self.assertIn('watchdog not activated',output)
         self.assertFalse((self.root/'.git/wiki-background-monitor/registration.json').exists())
         self.assertFalse((self.root/'.memory/inventory.json').exists())
-        self.run_cmd(sys.executable,'-c',"import sys; sys.path.insert(0,'.memory/tools'); import checkpoint_inventory as i; p={'scenario':'Test','records':[{'ref':'R1','role':'user','text':('A complete finding. '*850).strip()}],'prior_memory':[]}; list(i.requests(p,i.split(p['records']),'explicit_full','kind'));\ntry: i.preflight(p)\nexcept ValueError as e: assert 'no API calls made' in str(e)\nelse: raise AssertionError('late-stage oversize was accepted')")
+        self.run_cmd(sys.executable,'-c',"import sys; sys.path.insert(0,'.memory/tools'); import checkpoint_inventory as i; p={'scenario':'Test','records':[{'ref':'R1','role':'user','text':('A complete finding. '*850).strip()}],'prior_memory':[]}; list(i.requests(p,i.split(p['records']),'kind'));\ntry: i.preflight(p)\nexcept ValueError as e: assert 'no API calls made' in str(e)\nelse: raise AssertionError('late-stage oversize was accepted')")
         head=self.run_cmd('git','rev-parse','HEAD');self.update();self.assertEqual(head,self.run_cmd('git','rev-parse','HEAD'))
 
     def test_upgrade_preserves_knowledge_cursors_backend_custom_skills_and_inbox(self):

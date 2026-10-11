@@ -1,0 +1,74 @@
+{
+  "base_main": "38829ec08e792ef20ae7179062a98c24a210ed63",
+  "work_branch": "simplify/system-cleanup",
+  "scope": "S01 only; no main integration or installed-project upgrade",
+  "hypotheses": {
+    "S01": {
+      "title": "Keep only the accepted full-context Jev inventory path",
+      "status": "verified_in_work_branch",
+      "runtime_lines_removed": 40,
+      "removed_functions": [
+        "terms",
+        "focus",
+        "aggregate"
+      ],
+      "preserved": "Four stages, prompts, criteria, source offsets/attachments, batching, redaction, refusal behavior and completion manifest",
+      "validation": {
+        "synthetic_packets": 12,
+        "stage_request_byte_comparisons": 32,
+        "fixed_response_pipeline_fixtures": 8,
+        "preflight_refusal_fixtures": 4,
+        "focused_tests_passed": 6,
+        "regression_tests_passed": 93,
+        "systemd_tests_skipped": 5,
+        "updater_selfcheck": "passed",
+        "distribution_check": "passed",
+        "live_provider_calls": 0
+      },
+      "contract_fixture": "code/wiki-init/fixtures/inventory-main-contract.json",
+      "baseline_recovery": "Read checkpoint_inventory.py from base_main; experimental worktrees retain their original implementation",
+      "limitation": "Fixed transport responses test orchestration, not model judgment or an accuracy improvement"
+    },
+    "S02": {
+      "title": "Make apply the only mandatory technical package application step",
+      "status": "proposed"
+    },
+    "S03": {
+      "title": "Own harmful-write probes in one doctor health path",
+      "status": "proposed"
+    },
+    "S04": {
+      "title": "Separate original-project preferences from generic memory",
+      "status": "proposed"
+    },
+    "S05": {
+      "title": "Collect resume context and watchdog notices through one entry point",
+      "status": "proposed"
+    },
+    "S06": {
+      "title": "Give procedural rules one primary document owner",
+      "status": "proposed"
+    },
+    "S07": {
+      "title": "Provide a small interface for candidate shape validation",
+      "status": "proposed"
+    },
+    "S08": {
+      "title": "Parse the decision graph through one consistent implementation",
+      "status": "proposed"
+    },
+    "S09": {
+      "title": "Share update workflow across legacy and independent layouts",
+      "status": "proposed"
+    },
+    "S10": {
+      "title": "Measure whether the legacy write-round heuristic is still useful",
+      "status": "proposed"
+    },
+    "S11": {
+      "title": "Share identical hook policies while preserving native adapters",
+      "status": "proposed"
+    }
+  },
+  "preserved_priorities": "All five first-stage priorities and phase-two P1/P2; experimental P3/P4/P5 remain separate"
+}

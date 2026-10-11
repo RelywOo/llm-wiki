@@ -1,0 +1,521 @@
+{
+  "baseline_commit": "38829ec08e792ef20ae7179062a98c24a210ed63",
+  "baseline_source_sha256": "d4b16d768255d9213844b51ebee46559b458de6e5ed36eb5ab3b5d0c5d3a94fe",
+  "contract": "UTF-8 payload bytes, batching/mapping, all-stage preflight and fixed-response handoff; no model-quality claim",
+  "cases": {
+    "no_prior": {
+      "preflight": {
+        "value": {
+          "kind": {
+            "potential_questions": 2,
+            "max_state_question_bytes": 1571
+          },
+          "status": {
+            "potential_questions": 2,
+            "max_state_question_bytes": 2791
+          },
+          "retention": {
+            "potential_questions": 2,
+            "max_state_question_bytes": 2048
+          },
+          "relation": {
+            "potential_questions": 1,
+            "max_state_question_bytes": 2267
+          }
+        }
+      },
+      "requests": {
+        "kind": [
+          {
+            "sha256": "978b4dc8427ce74f8831ef2f4288f9cbb6a255d37927768aff8a8209747a5692",
+            "questions": 2,
+            "bytes": 2569
+          }
+        ],
+        "status": [
+          {
+            "sha256": "93799d367faa78b718a7bb865f1fc791d7147face3ed530c5be43e61a276effe",
+            "questions": 2,
+            "bytes": 5009
+          }
+        ],
+        "retention": [
+          {
+            "sha256": "1a31e391a85f34091562879d7160cd463960b91e3193fb2d98e80adeaccdc277",
+            "questions": 2,
+            "bytes": 3523
+          }
+        ],
+        "relation": [
+          {
+            "sha256": "ac2a2850badcaaa43337872f706227dae964fc0dc06a153a2f6bf9d8ce785fa2",
+            "questions": 1,
+            "bytes": 2326
+          }
+        ]
+      },
+      "handoff_sha256": "b101f37edec9716657962d83cd95b150dd3f04c62e72d3d4f60badd190b5517b"
+    },
+    "unicode": {
+      "preflight": {
+        "value": {
+          "kind": {
+            "potential_questions": 2,
+            "max_state_question_bytes": 1964
+          },
+          "status": {
+            "potential_questions": 2,
+            "max_state_question_bytes": 3184
+          },
+          "retention": {
+            "potential_questions": 2,
+            "max_state_question_bytes": 2441
+          },
+          "relation": {
+            "potential_questions": 2,
+            "max_state_question_bytes": 2633
+          }
+        }
+      },
+      "requests": {
+        "kind": [
+          {
+            "sha256": "ad27c54b473601a87c45848ff6f9aac90e0fee87cc874b7c8b75aa256c1d0c24",
+            "questions": 2,
+            "bytes": 2988
+          }
+        ],
+        "status": [
+          {
+            "sha256": "b6162de6219d91e7ba2dbd81f4d8cbf650a802ae6da1cf0ff846d084462b019b",
+            "questions": 2,
+            "bytes": 5428
+          }
+        ],
+        "retention": [
+          {
+            "sha256": "4be31dc56d7417653f9931c1b312831a0f74724db3e7d5786203a709dc1809cf",
+            "questions": 2,
+            "bytes": 3942
+          }
+        ],
+        "relation": [
+          {
+            "sha256": "27a18dd31201ba6d43e4d88fb0ac51f2b634ccd62491952110ae16e13884f102",
+            "questions": 2,
+            "bytes": 4320
+          }
+        ]
+      },
+      "handoff_sha256": "78e0a86347ae7e03dc083dabd347d0f257a99fbdd7cb0d6906a8354ba286840e"
+    },
+    "table_links": {
+      "preflight": {
+        "value": {
+          "kind": {
+            "potential_questions": 4,
+            "max_state_question_bytes": 1745
+          },
+          "status": {
+            "potential_questions": 4,
+            "max_state_question_bytes": 2965
+          },
+          "retention": {
+            "potential_questions": 4,
+            "max_state_question_bytes": 2222
+          },
+          "relation": {
+            "potential_questions": 4,
+            "max_state_question_bytes": 2414
+          }
+        }
+      },
+      "requests": {
+        "kind": [
+          {
+            "sha256": "d5b8242809e99e7443413e2a801fd00f32ea82cd913289f39dac4aa050a5f0e3",
+            "questions": 4,
+            "bytes": 4619
+          }
+        ],
+        "status": [
+          {
+            "sha256": "49242b7cd0baef9fd19d81d6bdacd444ccb3c55130a7b08b04bf9007b972c834",
+            "questions": 4,
+            "bytes": 9499
+          }
+        ],
+        "retention": [
+          {
+            "sha256": "9107297c43e3cbbdc9499d94b6f0c3c53743bc612d2f13dd62fe9c50542d1cc9",
+            "questions": 4,
+            "bytes": 6527
+          }
+        ],
+        "relation": [
+          {
+            "sha256": "cfb4092b44ce124de8b27d1934b13b21dce29f4b50ccce8c744e8af3b7babfc1",
+            "questions": 4,
+            "bytes": 7283
+          }
+        ]
+      },
+      "handoff_sha256": "e5e4f3de42006a93b0e2369cdbad5a7370fae656d28931bd7b969fdc621bb13f"
+    },
+    "mixed": {
+      "preflight": {
+        "value": {
+          "kind": {
+            "potential_questions": 4,
+            "max_state_question_bytes": 1762
+          },
+          "status": {
+            "potential_questions": 4,
+            "max_state_question_bytes": 2982
+          },
+          "retention": {
+            "potential_questions": 4,
+            "max_state_question_bytes": 2239
+          },
+          "relation": {
+            "potential_questions": 3,
+            "max_state_question_bytes": 2435
+          }
+        }
+      },
+      "requests": {
+        "kind": [
+          {
+            "sha256": "cc928c8b100f1528d7b7967ad632dc3a54e951c9ed5006c9490300091118e4b5",
+            "questions": 4,
+            "bytes": 4627
+          }
+        ],
+        "status": [
+          {
+            "sha256": "7fbb5108e4fbf4ac137779c6a272b19e7b593dc267b941fe39624f60e09d5c52",
+            "questions": 4,
+            "bytes": 9507
+          }
+        ],
+        "retention": [
+          {
+            "sha256": "008e1b234f5cf0a1409b03fb7d61a49eab27d94ab2edc8090e5115b7bb938880",
+            "questions": 4,
+            "bytes": 6535
+          }
+        ],
+        "relation": [
+          {
+            "sha256": "1c928e003ae307fa28ad1a61a2651b1ce1503375dd4cf0410449325f1af0fe09",
+            "questions": 3,
+            "bytes": 5716
+          }
+        ]
+      },
+      "handoff_sha256": "e628b288aefae30320e27f2be0c79b51ada9359f9cb2ee5db9d60826c9428a65"
+    },
+    "all_none": {
+      "preflight": {
+        "value": {
+          "kind": {
+            "potential_questions": 1,
+            "max_state_question_bytes": 1526
+          },
+          "status": {
+            "potential_questions": 1,
+            "max_state_question_bytes": 2746
+          },
+          "retention": {
+            "potential_questions": 1,
+            "max_state_question_bytes": 2003
+          },
+          "relation": {
+            "potential_questions": 1,
+            "max_state_question_bytes": 2195
+          }
+        }
+      },
+      "requests": {
+        "kind": [
+          {
+            "sha256": "8479df0e69a087d3baa384e990e82674224902624be5fe37e30894a5e0b3c9ad",
+            "questions": 1,
+            "bytes": 1588
+          }
+        ],
+        "status": [
+          {
+            "sha256": "a3c078163253184b0616c325b1907bec7c87e9b9c1576013424c21411d5424bf",
+            "questions": 1,
+            "bytes": 2808
+          }
+        ],
+        "retention": [
+          {
+            "sha256": "572bd46998d28645ebe4deab1db25112638751c8e119be32701a3c2b00758676",
+            "questions": 1,
+            "bytes": 2065
+          }
+        ],
+        "relation": [
+          {
+            "sha256": "d64cd24727e252a6b09941afa451bbfbb2a21fb43b6a0b4466bf0e832098e505",
+            "questions": 1,
+            "bytes": 2254
+          }
+        ]
+      },
+      "handoff_sha256": "27e2ecf056f59a13af366a635fcc301c2599aa51eb3707671deef967b98ad637"
+    },
+    "count_batches": {
+      "preflight": {
+        "value": {
+          "kind": {
+            "potential_questions": 70,
+            "max_state_question_bytes": 5684
+          },
+          "status": {
+            "potential_questions": 70,
+            "max_state_question_bytes": 6904
+          },
+          "retention": {
+            "potential_questions": 70,
+            "max_state_question_bytes": 6161
+          },
+          "relation": {
+            "potential_questions": 70,
+            "max_state_question_bytes": 6352
+          }
+        }
+      },
+      "requests": {
+        "kind": [
+          {
+            "sha256": "1b958ffc334f02db900359148c9df62aac4cebb7651443f7f42b36649e8aaf63",
+            "questions": 32,
+            "bytes": 34646
+          },
+          {
+            "sha256": "ed1ff36b458439609c1ef7550b1fb0c1572f8675db011e0fc273fcb3ab9d0f63",
+            "questions": 32,
+            "bytes": 34693
+          },
+          {
+            "sha256": "fe3f1fc8f319fed19d67ba2ba9ee01888035a19039c733e002d6be44bacb7118",
+            "questions": 6,
+            "bytes": 10413
+          }
+        ],
+        "status": [
+          {
+            "sha256": "0e6a05c7a4d7dd1edd83deb42ea2c8dc80a83c826f4a95282d0906566b9f8c5c",
+            "questions": 25,
+            "bytes": 58608
+          },
+          {
+            "sha256": "41c6f6d53572754adf5c1397ec0a171ff2e21898645c5c538371acabd6197c09",
+            "questions": 25,
+            "bytes": 58655
+          },
+          {
+            "sha256": "632420d373ec0c7575a7d9371504e60a54b7a8f6069116242a8187f9ec2121fe",
+            "questions": 20,
+            "bytes": 47885
+          }
+        ],
+        "retention": [
+          {
+            "sha256": "5cfefc8ea5c9ab314b4e3890d200f5c33622171cd2503572a2275b080e958115",
+            "questions": 32,
+            "bytes": 49910
+          },
+          {
+            "sha256": "e0aa4b53ef20a957ee26fa211a73db91ebe5a8bc1c3b2856e7bab5fa22d114a2",
+            "questions": 32,
+            "bytes": 49957
+          },
+          {
+            "sha256": "0e354ae31ac4c4d7b893d53bf6c48f05942de1d438c188d4ff698cb32c754453",
+            "questions": 6,
+            "bytes": 13275
+          }
+        ],
+        "relation": [
+          {
+            "sha256": "9ef8eab5e3663c8f2dff5b96e63a9495e50b06cb6bed39451591e6a201d06f37",
+            "questions": 32,
+            "bytes": 55935
+          },
+          {
+            "sha256": "b5581b21cdc13d7880af4f0e42389c99cc2ddfe10de06310f50cab21f0b45500",
+            "questions": 32,
+            "bytes": 55973
+          },
+          {
+            "sha256": "49ff12b911d1b220720283bca120d3ce87856411a06fd11fd48b59e0bf5121ec",
+            "questions": 6,
+            "bytes": 14403
+          }
+        ]
+      },
+      "handoff_sha256": "0f912234c4b03916c33684c621666c8a25284fb8b5878c8b90f4d91cdb16b990"
+    },
+    "byte_batches": {
+      "preflight": {
+        "value": {
+          "kind": {
+            "potential_questions": 35,
+            "max_state_question_bytes": 24945
+          },
+          "status": {
+            "potential_questions": 35,
+            "max_state_question_bytes": 26165
+          },
+          "retention": {
+            "potential_questions": 35,
+            "max_state_question_bytes": 25422
+          },
+          "relation": {
+            "potential_questions": 35,
+            "max_state_question_bytes": 25613
+          }
+        }
+      },
+      "requests": {
+        "kind": [
+          {
+            "sha256": "49c05e4ffd92633d324ab5b327a94e9ed4086f583e7e814991639c69a923dd88",
+            "questions": 23,
+            "bytes": 58547
+          },
+          {
+            "sha256": "58e7be5e81870b614ec84551a4d80b209a665211418894370a1229a4c1c9e39e",
+            "questions": 12,
+            "bytes": 41797
+          }
+        ],
+        "status": [
+          {
+            "sha256": "c9634f135d7b0ee2ddea6866f12439d893d4dd8532fa4ff3e052bf8a8ae4b9e8",
+            "questions": 13,
+            "bytes": 59137
+          },
+          {
+            "sha256": "c7f8f21d721e95dee83ea8442457c409a4f496bd20d33e0bf7a139181b70d771",
+            "questions": 13,
+            "bytes": 59184
+          },
+          {
+            "sha256": "b7e62fef77bbc7f5a4a2d8f8b2bfb8643262ea17fae279d5c476bbccaf465233",
+            "questions": 9,
+            "bytes": 48197
+          }
+        ],
+        "retention": [
+          {
+            "sha256": "c279b570821ad8a226503cad7b380d12f60158f47180235bb1aae51e16fc34c0",
+            "questions": 18,
+            "bytes": 59498
+          },
+          {
+            "sha256": "a7f7ba55fcc7ce7476b674aaa4c61a319310086639cf17c8008f69f6422e0e08",
+            "questions": 17,
+            "bytes": 57541
+          }
+        ],
+        "relation": [
+          {
+            "sha256": "a157296ea058887454bf197e35a5b10d543bbe1cebf50d0b9f59d20f937d6853",
+            "questions": 16,
+            "bytes": 58507
+          },
+          {
+            "sha256": "22743048c2554e36e825b40f2c63354ae10c69f3cd3bd3f63e7e127b876761d7",
+            "questions": 16,
+            "bytes": 58545
+          },
+          {
+            "sha256": "bf3cd8be0c60b830c55cd89b46a143db60d146874c9aa48f38afe52fe1f8654c",
+            "questions": 3,
+            "bytes": 30056
+          }
+        ]
+      },
+      "handoff_sha256": "78c920d1803d91d98c8d51a87036c062cee76bb33362bf299a431302ee0cd579"
+    },
+    "late_oversize": {
+      "preflight": {
+        "error": "Oversize state+question; no API calls made, no evidence truncated. Limit 31000 bytes. relation R1.p1: 36152 bytes (excess 5152)"
+      }
+    },
+    "oversize": {
+      "preflight": {
+        "error": "Oversize state+question; no API calls made, no evidence truncated. Limit 31000 bytes. kind R1.p1.a1: 71485 bytes (excess 40485); status R1.p1.a1: 72705 bytes (excess 41705); retention R1.p1.a1: 71962 bytes (excess 40962); relation R1.p1: 72154 bytes (excess 41154)"
+      }
+    },
+    "empty": {
+      "preflight": {
+        "error": "No session records selected"
+      }
+    },
+    "duplicate_ref": {
+      "preflight": {
+        "error": "Source references must be unique simple identifiers"
+      }
+    },
+    "redacted": {
+      "preflight": {
+        "value": {
+          "kind": {
+            "potential_questions": 2,
+            "max_state_question_bytes": 1754
+          },
+          "status": {
+            "potential_questions": 2,
+            "max_state_question_bytes": 2974
+          },
+          "retention": {
+            "potential_questions": 2,
+            "max_state_question_bytes": 2231
+          },
+          "relation": {
+            "potential_questions": 1,
+            "max_state_question_bytes": 2457
+          }
+        }
+      },
+      "requests": {
+        "kind": [
+          {
+            "sha256": "98e99ea617abd1699a42af40310c58840c0f6f9fbe1a29b2ee5bc1165efb1bfd",
+            "questions": 2,
+            "bytes": 2759
+          }
+        ],
+        "status": [
+          {
+            "sha256": "c67888a99baf9b5957a6733afa82891276683bcfaa29ddf58f0c6b08dfde5fce",
+            "questions": 2,
+            "bytes": 5199
+          }
+        ],
+        "retention": [
+          {
+            "sha256": "066f53625231d7354bc05ecccbf2e91c74c0499150ea86f6894c0d179b8150f4",
+            "questions": 2,
+            "bytes": 3713
+          }
+        ],
+        "relation": [
+          {
+            "sha256": "6c5505f8cf81ccf6a687afeccc996380d4f2cc9a1e61d6ab78f39a6cfc7972ab",
+            "questions": 1,
+            "bytes": 2516
+          }
+        ]
+      },
+      "handoff_sha256": "d3a54a924344db270decf61935a5b1ced424beab23cf5bbc88e548798337de48"
+    }
+  }
+}
