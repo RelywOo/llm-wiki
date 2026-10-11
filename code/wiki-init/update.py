@@ -6,7 +6,8 @@ the same templates over a live project — MECHANISM only, never KNOWLEDGE.
 Updates: .memory/tools/*.py, .claude/hooks/*.py, .claude/commands/wiki-*.md
 (<project> re-substituted), .claude/settings.json (same idempotent merge, plus
 RETIRED hook entries stripped), CLAUDE.md "# Session Memory" section (h1-bounded
-replace — user sections untouched; a retired "# rtk" section is REMOVED, decision
+replace — user sections untouched except the exact legacy standard language rule;
+a retired "# rtk" section is REMOVED, decision
 0047), tracked `.memory/hooks/pre-commit` + local `core.hooksPath` bootstrap, and —
 when .codex/hooks.json exists or --codex is passed — the Codex layer (hooks.json
 re-rendered with the CURRENT absolute repo path, AGENTS.md + skills regenerated
@@ -50,6 +51,12 @@ RETIRED_HOOKS = {"rtk_deny_net.py"}  # rtk dropped whole (decision 0047)
 RETIRED_COMMANDS = {"wiki-finish-task.md"}  # -> /wiki-clear (structural.py state-reset)
 # retired CLAUDE.md h1 sections — spliced out when found
 RETIRED_SECTIONS = ("# rtk",)
+LEGACY_LANGUAGE_SECTION = (
+    "# Language\n"
+    "- Always communicate with me only in English, everywhere and every time. "
+    "This applies to all explanations, reports, questions, and other messages, "
+    "as well as code, commit messages, and PR descriptions."
+)
 
 TOOLING_PREFIXES = (".memory/tools/", ".memory/hooks/", ".claude/hooks/",
                     ".claude/commands/", ".github/")
@@ -146,6 +153,18 @@ def _splice(lines: list[str], start: int, end: int, frag: str) -> list[str]:
     return lines[:start] + [repl] + lines[end:]
 
 
+def _migrate_standard_language(lines: list[str], fragment: str) -> list[str]:
+    """Upgrade only the exact legacy default; preserve custom language sections."""
+    span = _find_h1_section(lines, "# Language")
+    if span is None or "".join(lines[span[0]:span[1]]).rstrip() != LEGACY_LANGUAGE_SECTION:
+        return lines
+    fresh = fragment.splitlines(keepends=True)
+    replacement = _find_h1_section(fresh, "# Language")
+    if replacement is None:
+        return lines
+    return _splice(lines, *span, frag="".join(fresh[replacement[0]:replacement[1]]))
+
+
 def update_claude_md(root: Path, project: str) -> list[str]:
     """Replace the memory section in place, splice out retired ones; report notes."""
     mem = (FRAGS / "claude-md-memory.md").read_text(encoding="utf-8") \
@@ -157,6 +176,10 @@ def update_claude_md(root: Path, project: str) -> list[str]:
         return ["CLAUDE.md was MISSING — created fresh with memory section"]
     text = cm.read_text(encoding="utf-8")
     lines = text.splitlines(keepends=True)
+    migrated = _migrate_standard_language(lines, mem)
+    if migrated != lines:
+        notes.append("CLAUDE.md: legacy standard language rule updated")
+    lines = migrated
 
     span = _find_h1_section(lines, "# Session Memory")
     if span:
@@ -422,6 +445,7 @@ def update_independent(root: Path, args):
     instructions = root / ".memory/INSTRUCTIONS.md"
     lines = instructions.read_text(encoding="utf-8").splitlines(keepends=True)
     fragment = (FRAGS / "claude-md-memory.md").read_text(encoding="utf-8").replace("<project>", project)
+    lines = _migrate_standard_language(lines, fragment)
     span = _find_h1_section(lines, "# Session Memory")
     if span:
         lines = _splice(lines, *span, frag=fragment[fragment.index("# Session Memory"):])

@@ -70,7 +70,7 @@ python .memory/tools/structural.py guard
 python .memory/tools/structural.py doctor
 ```
 
-Run these inside the installed target project. Use `structural.py help` for the command list. Installation supplies project instructions, including an English default and a `code/` layout convention; review them for your project.
+Run these inside the installed target project. Use `structural.py help` for the command list. Installation supplies project instructions, including English by default with explicit Russian/English switches for the current session, and a `code/` layout convention; review them for your project.
 
 ## Reliable decisions and task memory
 
@@ -133,6 +133,8 @@ python /path/to/llm-wiki/code/wiki-init/update.py --root /path/to/project
 ```
 
 Updates preserve wiki pages, STATE, raw project inputs, and runtime selections. They refresh managed tools, instructions, and integrations. Adding `--claude`, `--codex`, or `--prime` enables another integration; updating does not uninstall integrations.
+
+The exact old standard English-only language rule is upgraded to allow explicit Russian/English switches for the current session. Custom language sections are preserved.
 
 ## Optional background checkpoints
 

@@ -17,7 +17,10 @@ After the action, make the FIRST line of the FINAL reply one of:
 "Memory check: yes · ∅" (map available, topic absent from wiki),
 or "Memory check: no" (not about project memory).
 The icon must reflect tool evidence from THIS turn, not previous context.
-For resume turns use "Memory check: yes" without an icon. All user-facing output must be in English."""
+For resume turns use "Memory check: yes" without an icon.
+
+Follow the project's Language instructions and the session's selected conversation
+language for user-facing output. Keep the Memory check markers exactly as written."""
 
 if __name__ == "__main__":
     print(DIRECTIVE)

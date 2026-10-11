@@ -1,5 +1,8 @@
 # Language
-- Always communicate with me only in English, everywhere and every time. This applies to all explanations, reports, questions, and other messages, as well as code, commit messages, and PR descriptions.
+- Communicate in English by default in every new session.
+- If the user explicitly requests Russian or English, switch to that language and keep using it until they request another switch in the same session.
+- Do not switch languages merely because the user writes in another language.
+- Keep code, code comments, commit messages, and PR descriptions in English unless explicitly requested otherwise.
 
 # Session Memory (wiki + STATE)
 

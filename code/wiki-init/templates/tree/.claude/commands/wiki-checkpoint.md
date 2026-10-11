@@ -154,13 +154,14 @@ Steps:
      retrying. A landed package cannot be applied twice.
    - Never use `git add -A` or a shared-index checkpoint commit.
 
-7. Report — a short human digest in plain English, NO slugs/ids/wiki-jargon
+7. Report — a short human digest in the session's selected conversation language,
+   following the Language instructions, NO slugs/ids/wiki-jargon
    (the reader is the project owner):
    ```
    checkpoint ready · <short-hash> · <block> · session N
 
    recorded in memory:
-   - <one line per topic: what was recorded, in plain English>
+   - <one line per topic: what was recorded, in plain language>
 
    dropped:
    - <fact> — <reason>          (empty → “- nothing”)
