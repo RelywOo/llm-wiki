@@ -1552,7 +1552,6 @@ def doctor(root: Path | None = None, *, portable: bool = False):
     probe because the ``|| true`` wrappers mask a missing script from exit codes. The
     git hard floor and an installed Prime Agent adapter are checked explicitly."""
     import json
-    import os
     import shutil
     import subprocess
 
@@ -1561,7 +1560,6 @@ def doctor(root: Path | None = None, *, portable: bool = False):
 
     settings = root / ".claude" / "settings.json"
     commands = []
-    deny_hooks = []
     runtime_file = root / ".memory/runtimes.json"
     if runtime_file.is_file():
         try:
@@ -1589,8 +1587,6 @@ def doctor(root: Path | None = None, *, portable: bool = False):
                     commands.append(cmd)
                     code, note = _probe_hook(cmd, _probe_payload(event, matcher, root), root)
                     label = f"hook {event}[{matcher}]"
-                    if event == "PreToolUse" and ("Edit" in matcher or "Write" in matcher):
-                        deny_hooks.append((label, cmd, h.get("timeout", 10), False))
                     if code is None:
                         warns.append(f"{label}: {note}")
                     elif code in (126, 127):
@@ -1617,8 +1613,6 @@ def doctor(root: Path | None = None, *, portable: bool = False):
                     cmd, on_windows = _codex_hook_command(h)
                     matcher = g.get("matcher", "*")
                     label = f"hook Codex {event}[{matcher}]"
-                    if event == "PreToolUse" and "apply_patch" in matcher and cmd:
-                        deny_hooks.append((label, cmd, h.get("timeout", 10), True))
                     if not cmd:
                         fails.append(f"{label}: {_codex_hook_key(on_windows)} missing")
                         continue
@@ -1633,16 +1627,6 @@ def doctor(root: Path | None = None, *, portable: bool = False):
                         warns.append(f"{label}: exit {code} on a benign probe: {cmd}")
                     else:
                         oks.append(f"{label}: runs (exit 0)")
-
-    for label, cmd, timeout, codex in deny_hooks:
-        code, stdout, stderr, note = _probe_hook_output(
-            cmd, _deny_probe_payload(root, codex=codex), root,
-            timeout=timeout, windows=(os.name == "nt" and codex))
-        if code != 0 or not _stdout_denies(stdout):
-            detail = note or stderr.strip() or stdout.strip() or "no deny JSON emitted"
-            fails.append(f"{label}: harmful rewrite was NOT behaviorally denied: {detail}")
-        else:
-            oks.append(f"{label}: harmful rewrite behaviorally denied")
 
     for cmd in commands:
         for rel in PROJECT_DIR_REF.findall(cmd):

@@ -1,7 +1,7 @@
 {
   "base_main": "38829ec08e792ef20ae7179062a98c24a210ed63",
   "work_branch": "simplify/system-cleanup",
-  "scope": "S01 and S02 only; no main integration or installed-project upgrade",
+  "scope": "S01 through S03 only; no main integration or installed-project upgrade",
   "hypotheses": {
     "S01": {
       "title": "Keep only the accepted full-context Jev inventory path",
@@ -54,7 +54,28 @@
     },
     "S03": {
       "title": "Own harmful-write probes in one doctor health path",
-      "status": "proposed"
+      "status": "verified_in_work_branch",
+      "changed": "Doctor delegates harmful-write behavior probes to its existing enforcement_health call; the duplicate probe loop, collection and unused import are removed",
+      "runtime_lines_removed": 16,
+      "preserved": "Read/write-boundary enforcement health, all benign hook probes, six full selfchecks, configured command/timeout selection, native runtime differences and refusal behavior",
+      "validation": {
+        "focused_tests_passed": 6,
+        "paired_probe_scenarios": 18,
+        "paired_verdicts_preserved": true,
+        "harmful_probes_per_configured_guard_before": 2,
+        "harmful_probes_per_configured_guard_after": 1,
+        "benign_probe_counts_preserved": true,
+        "full_selfcheck_call_counts_preserved": true,
+        "other_structural_module_ast_nodes": "unchanged",
+        "regression": "passed",
+        "updater_selfcheck": "passed",
+        "distribution_check": "passed",
+        "regression_tests_passed": 111,
+        "systemd_tests_skipped": 5,
+        "runtime_combinations_passed": 8,
+        "upgrade_from_S02_all_runtimes": "passed; knowledge and selections preserved, second update idempotent"
+      },
+      "limitation": "Focused fixtures stub unrelated pinned-bundle health and full selfcheck execution; Linux hook probes run real subprocesses. Native Windows was not exercised; command selection and PowerShell invocation were simulated. No wall-time speed claim."
     },
     "S04": {
       "title": "Separate original-project preferences from generic memory",
@@ -89,5 +110,15 @@
       "status": "proposed"
     }
   },
-  "preserved_priorities": "All five first-stage priorities and phase-two P1/P2; experimental P3/P4/P5 remain separate"
+  "preserved_priorities": "All five first-stage priorities and phase-two P1/P2; experimental P3/P4/P5 remain separate",
+  "preexisting_findings": {
+    "F01": {
+      "title": "Transaction selfcheck assumes STATE contains a Now section",
+      "status": "observed_not_changed",
+      "reproduced": "S02 baseline and S03 candidate",
+      "effect": "Doctor or update can report a selfcheck failure for a valid STATE containing only Open",
+      "owner": "code/wiki-init/templates/tree/.memory/tools/checkpoint_txn.py: selfcheck",
+      "scope": "Outside S03; existing validation limitation, not introduced by deduplicating probes"
+    }
+  }
 }
