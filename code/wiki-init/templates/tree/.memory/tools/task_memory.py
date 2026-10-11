@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import date
 import hashlib
+import html
 import json
 import os
 from pathlib import Path
@@ -238,6 +239,81 @@ def current(text, selected=None, revision=None, root=None):
                                'current_file':source_status(root,events[n-1]['source'])} for n in sorted(references)}}
 
 
+def plan(text, root=None):
+    """Derive the whole work inventory, preserving uncertainty and every direct edge."""
+    snapshot=current(text,root=root)
+    groups={key:[] for key in ('ready','blocked','uncertain','ongoing','closed')}
+    for key,task in snapshot['tasks'].items():
+        deps=task['dependencies']
+        blocked=sorted(k for k in deps or [] if snapshot['tasks'][k]['status'] not in {'done',None})
+        unknown=sorted(k for k in deps or [] if snapshot['tasks'][k]['status'] is None)
+        status=task['status']
+        if status in {'done','cancelled'}:group='closed'
+        elif status=='in_progress':group='ongoing'
+        elif status is None:group='uncertain'
+        elif status=='blocked' or blocked:group='blocked'
+        elif deps is None or unknown or task['owner'] is None:group='uncertain'
+        else:group='ready'
+        warnings=[]
+        if task['unknown_fields']:warnings.append('unknown_fields')
+        if status=='blocked' and not blocked:warnings.append('manual_blocker_has_no_task_edge')
+        if status=='in_progress' and (blocked or unknown or deps is None):
+            warnings.append('ongoing_with_unfinished_prerequisites')
+        groups[group].append({name:task[name] for name in ('id','title','owner','due','priority',
+                              'release_required','dependencies','advisory_dependencies','unknown_fields')} |
+                             {'status':status,'blocked_by':blocked,'unknown_dependencies':unknown,'warnings':warnings})
+    for entries in groups.values():
+        entries.sort(key=lambda t:(t['priority'] if t['priority'] is not None else 5,t['due'] or '9999-12-31',t['id']))
+    warnings=[]
+    if not snapshot['tracked']:warnings.append('untracked_work_may_exist')
+    if not snapshot['complete']:warnings.append('inventory_has_unknown_fields')
+    if any(s['current_file']['status'] not in {'matches_current_file','not_checked'} for s in snapshot['sources'].values()):
+        warnings.append('source_excerpt_review_required')
+    return {'schema':1,'mode':'current_plan','inventory_complete':snapshot['complete'],
+            'selects_next':False,'continuation_source':'.memory/STATE.md#Next',
+            'groups':groups,'warnings':warnings,'snapshot':snapshot}
+
+
+def render_plan(packet):
+    """Human-facing plan and next steps from the same verified-state partition."""
+    def cell(value):
+        text='Unknown' if value is None else str(value)
+        return html.escape(text).replace('|',r'\|').replace('\n',' ').replace('\r',' ')
+    snapshot=packet['snapshot']
+    plan_digest=hashlib.sha256(json.dumps(packet,sort_keys=True).encode('utf-8')).hexdigest()
+    lines=['# Work plan','',
+           'Readiness does not select the next action; selected continuation is in .memory/STATE.md#Next.', '',
+           f"Revision: {snapshot['revision']} · digest: `{snapshot['digest']}`",'',
+           f'Plan digest: `{plan_digest}`','',
+           'Inventory: '+('complete' if packet['inventory_complete'] else 'incomplete'),
+           'Warnings: '+(', '.join(packet['warnings']) or 'none'),'']
+    headings={'ready':'Ready to start','blocked':'Blocked work','uncertain':'Uncertain work',
+              'ongoing':'Ongoing work','closed':'Closed work'}
+    for group,tasks in packet['groups'].items():
+        lines += ['## '+headings[group],'']
+        if not tasks:lines+=['None in the tracked inventory.',''];continue
+        lines+=['| Task | Owner | Due | Next step | Unknown fields |',
+                '| --- | --- | --- | --- | --- |']
+        for task in tasks:
+            if group=='ready':step='Start assigned work'
+            elif group=='closed':step='No active action'
+            elif group=='ongoing':step='Review unfinished prerequisites before continuing' if task['warnings'] else 'Continue current work'
+            elif group=='blocked':step='Resolve prerequisites: '+', '.join(task['blocked_by']) if task['blocked_by'] else 'Review recorded manual blocker and its source'
+            else:step='Clarify unknown status, ownership or prerequisites'
+            if task['blocked_by'] and group not in {'blocked','closed'}:
+                step+='; unfinished prerequisites: '+', '.join(task['blocked_by'])
+            if task['status']=='blocked':
+                seq=snapshot['tasks'][task['id']]['field_events']['status']
+                event=snapshot['sources'][str(seq)]
+                source=event['source']
+                step+='; recorded blocker: '+event['reason']+'; source: '+source['path']+'; quote: '+source['quote']
+            if task['unknown_dependencies']:step+='; clarify prerequisite status: '+', '.join(task['unknown_dependencies'])
+            lines+=['| '+' | '.join(cell(value) for value in (task['id']+': '+(task['title'] or 'Unknown'),
+                      task['owner'],task['due'],step,', '.join(task['unknown_fields']) or 'none'))+' |']
+        lines+=['']
+    return '\n'.join(lines)
+
+
 def apply(root, event):
     wiki=root/'.memory/wiki'
     require(wiki.is_dir() and not wiki.is_symlink(), 'wiki directory missing or symlinked')
@@ -272,8 +348,22 @@ def apply(root, event):
 
 
 def main(root, args):
-    usage='tasks apply EVENT.json | current [ID] | show [ID] | at REV [ID] | history [ID] | verify SNAPSHOT.json | check [--complete]'
+    usage='tasks apply EVENT.json | plan [--markdown] | verify-plan PLAN.json/PLAN.md | current [ID] | show [ID] | at REV [ID] | history [ID] | verify SNAPSHOT.json | check [--complete]'
     require(bool(args),usage)
+    if args[0] in {'plan','verify-plan'}:
+        output=plan(load(root),root)
+        if args[0]=='plan':
+            require(args in (['plan'],['plan','--markdown']),usage)
+            if len(args)==2:print(render_plan(output));return
+        else:
+            require(len(args)==2,usage)
+            path=Path(args[1]);text=path.read_text(encoding='utf-8')
+            valid=(text==render_plan(output)+'\n') if path.suffix=='.md' else (
+                json.dumps(load_json(text),sort_keys=True)==json.dumps(output,sort_keys=True))
+            require(valid,
+                    'plan is stale or altered; regenerate with tasks plan')
+            output={'verified':True,'revision':output['snapshot']['revision'],'digest':output['snapshot']['digest']}
+        print(json.dumps(output,ensure_ascii=False,indent=2));return
     if args[0]=='apply' and len(args)==2:
         print(json.dumps(apply(root,load_json(Path(args[1]).read_text(encoding='utf-8')))))
         return

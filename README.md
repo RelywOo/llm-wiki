@@ -87,7 +87,16 @@ explicit unknowns, keeps direct dependencies, and computes readiness:
 python .memory/tools/structural.py tasks apply event.json
 python .memory/tools/structural.py tasks current
 python .memory/tools/structural.py tasks check --complete
+python .memory/tools/structural.py tasks plan > plan.json
+python .memory/tools/structural.py tasks verify-plan plan.json
+python .memory/tools/structural.py tasks plan --markdown > plan.md
+python .memory/tools/structural.py tasks verify-plan plan.md
 ```
+
+Use the plan commands when the user requests a work plan or asks which tracked tasks
+can be started next. They are not automatic checkpoint or resume steps. Readiness does
+not authorize execution or replace the selected next action in STATE. Verification
+checks the plan against current recorded tasks and sources, not their underlying truth.
 
 Exact quotations can be extracted and checked without asking a model to reproduce them:
 

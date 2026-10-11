@@ -76,6 +76,29 @@ done hard prerequisites are ready. Cancelled prerequisites do not count as compl
 Every event has its own reason and source; field provenance is computed. Sequence conflicts
 and duplicate task IDs fail without writing. Do not edit or truncate the ledger directly.
 
+## Work plans
+When the user asks to create or update a work plan, or asks what tracked work can be
+started next, run `python .memory/tools/structural.py tasks plan` and save its unmodified
+output. Planning is not an automatic checkpoint, resume, status-report or editing step.
+Readiness does not authorize execution or replace the user-selected next action in STATE;
+preserve review-only and other explicit limits. The plan separates ready, blocked,
+uncertain, ongoing and closed inventory.
+It preserves owners, direct blockers, advisory links and explicit unknowns. Missing task
+tracking never proves that no work remains. An ongoing task with unfinished prerequisites
+is reported with a warning; a manual blocked state without a task edge stays blocked.
+Use the snapshot's status field event and its source/reason to explain that manual blocker.
+Ready means open, hard prerequisites done, and owner known; other missing fields remain
+visible and can make the inventory incomplete. Ordering is priority, due date, then ID;
+unknown priority/date sorts last within that criterion. This is a default work queue, not
+an optimized schedule or proof of resource availability.
+Before delivering or using a saved plan, run `tasks verify-plan <plan.json>` against current
+memory. Regenerate after a failure. Verification binds every group and row to the current
+ledger and source status; it does not validate the truth of source statements or freeze
+future changes. `tasks plan --markdown` generates human headings, tables and next steps from
+the same state when a Markdown plan is needed. Save that output to a `.md` file and
+check it with `tasks verify-plan` before delivery.
+Do not replace the generated plan with an unchecked prose task list.
+
 ## Evidence and quotations
 For a final answer with verifiable citations, write a manifest containing `answer` (an object
 with your conclusions/explanation) and `sources` (a nonempty list of source selections).
