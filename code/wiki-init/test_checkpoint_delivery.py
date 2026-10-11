@@ -210,6 +210,29 @@ raise SystemExit(package.main(['apply', '--name', 'direct']))
                 self.assertEqual(self.command(self.root, 'git', 'rev-parse', 'HEAD'), head)
                 self.assertEqual(self.command(self.root, 'git', 'status', '--porcelain'), status)
 
+    def test_generic_state_scores_and_opt_in_legacy_tracker(self):
+        path, package = self.prepare_draft()
+        entry = next(e for e in package['files'] if e['path'] == '.memory/STATE.md')
+        entry['content'] = '# STATE\n\n## Now\n- PostgreSQL migration: 3/5 checks passed.\n'
+        path.write_text(json.dumps(package))
+        self.command(self.root, sys.executable, '.memory/tools/checkpoint_package.py', 'apply', '--name', 'direct')
+        output = self.command(self.root, sys.executable, '.memory/tools/structural.py', 'resume')
+        self.assertNotIn('РУТИНА', output)
+        tracker = self.root/'.memory/tracker.md'
+        tracker.write_text('# Routine\nstart: 2026-10-12\n2026-10-12 comments=3/3\n')
+        path, package = self.prepare_draft(name='routine')
+        entry = next(e for e in package['files'] if e['path'] == '.memory/STATE.md')
+        entry['content'] = '# STATE\n\n## Now\n- comments 3/3 today.\n'
+        path.write_text(json.dumps(package))
+        before = self.knowledge()
+        output = self.command(self.root, sys.executable, '.memory/tools/checkpoint_package.py', 'apply', '--name', 'routine', expected=2)
+        self.assertIn('routine retold', output)
+        self.assertEqual(self.knowledge(), before)
+        self.assertIn('РУТИНА', self.command(self.root, sys.executable, '.memory/tools/structural.py', 'resume'))
+        saved = tracker.read_bytes()
+        self.command(self.root, sys.executable, '.memory/tools/structural.py', 'tracker')
+        self.assertEqual(tracker.read_bytes(), saved)
+
     def test_upgrade_delivers_missing_files_without_changing_knowledge(self):
         # Model a committed older installation that has no package layer.
         for relative in ['.memory/tools/checkpoint_inventory.py', '.memory/checkpoint-inventory.md', '.memory/tools/checkpoint_collect.py', '.memory/tools/checkpoint_package.py', '.memory/checkpoint-package.md']:

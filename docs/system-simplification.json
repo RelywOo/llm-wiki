@@ -79,7 +79,15 @@
     },
     "S04": {
       "title": "Separate original-project preferences from generic memory",
-      "status": "proposed"
+      "status": "verified_in_work_branch",
+      "changed": "Remove unsupported Serena advice; make tracker report and score constraints opt-in through existing tracker data; use project-appropriate overview fields",
+      "preserved": "Tracker CLI, records, grading, streaks, weekly schedule, queue run discovery, canonical STATE shape and overview budgets; existing tracker projects retain their legacy score rule",
+      "validation": {
+        "focused_integration": "passed; generic PostgreSQL 3/5 STATE saved, tracker report absent without tracker, legacy routine retelling refused with tracker, tracker reads preserve bytes",
+        "grep_nudge_selfcheck": "passed",
+        "final_regression": "pending"
+      },
+      "limitation": "The historical routine score heuristic is retained for explicitly existing tracker projects; no tracker feature or data is removed."
     },
     "S05": {
       "title": "Collect resume context and watchdog notices through one entry point",

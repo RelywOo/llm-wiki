@@ -118,7 +118,8 @@ Steps:
      rewritten by design). overview.md: Read once, make ALL overview edits from that Read.
 
      overview "State of the project" = fixed micro-schema of bullets, ONE line ≤400 chars
-     each (`Цель / Движки / Конверсия / Текущий блок — <блок> / Закрыто — <тема>`). Edit
+     each, using project-appropriate fields (goal, architecture, progress, current block,
+     closed work). Keep existing field names when updating an established overview. Edit
      only the bullets this session changed; CURATE, do NOT append — no date-stamps, no
      session diary; DELETE text the new facts obsolete (history lives in git + log.md).
 

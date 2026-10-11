@@ -205,7 +205,8 @@ def check(root, package, *, active=False):
     sensitive = {p for p in txn._changed_paths(root) if p == STATE or p.startswith('.memory/wiki/')}
     if sensitive - seen:
         raise PackageError('memory changes missing from package: ' + ', '.join(sorted(sensitive - seen)))
-    errors = structural._check_state(outputs[STATE].decode('utf-8'))
+    errors = structural._check_state(outputs[STATE].decode('utf-8'),
+                                     routine=(root / '.memory/tracker.md').is_file())
     headings = structural.toc(outputs[STATE].decode('utf-8'))
     if len(headings) != len(set(headings)):
         errors.append('STATE contains duplicate sections')

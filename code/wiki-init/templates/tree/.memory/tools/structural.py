@@ -955,7 +955,7 @@ def guard():
     state_path = root / ".memory" / "STATE.md"
     if state_path.exists():
         state_text = read_markdown(state_path)
-        violations += _check_state(state_text)
+        violations += _check_state(state_text, routine=(root / ".memory/tracker.md").is_file())
         if sha:
             at_cp = _git_text(root, "show", f"{sha}:.memory/STATE.md", strip=False)
             if _norm_eol(state_text) == _norm_eol(at_cp):
@@ -1095,9 +1095,9 @@ STATE_ROUTINE = re.compile(r"connect\w*|коннект\w*|comment\w*|комме�
 STATE_ROUTINE_TELL = re.compile(r"\d+\s*/\s*\d+")
 
 
-def _check_state(state_text: str) -> list[str]:
+def _check_state(state_text: str, *, routine: bool = False) -> list[str]:
     """PURE. STATE.md schema: only canonical `## ` sections (resume parses them), <=40 lines,
-    and no retelling of the daily routine (that is tracker.md's single home). A parenthetical
+    with optional legacy routine checks for projects using tracker.md. A parenthetical
     annotation after the canon name is fine — `## Tried & rejected (не повторять)` parses
     identically (section() matches by prefix); an alien header does not."""
     probs = []
@@ -1109,11 +1109,12 @@ def _check_state(state_text: str) -> list[str]:
     n = len(state_text.splitlines())
     if n > 40:
         probs.append(f"STATE.md: {n} lines > 40 — graduate permanent facts to a wiki page")
-    for line in _strip_code(state_text).splitlines():
-        if STATE_ROUTINE.search(line) and (m := STATE_ROUTINE_TELL.search(line)):
-            probs.append(f'STATE.md: routine retold in prose ("{m.group(0).strip()}" in '
-                         f'"{line.strip()[:60]}") — drop it; tracker.md is the only home '
-                         f"(resume reads it from there, so a retelling can only drift)")
+    if routine:
+        for line in _strip_code(state_text).splitlines():
+            if STATE_ROUTINE.search(line) and (m := STATE_ROUTINE_TELL.search(line)):
+                probs.append(f'STATE.md: routine retold in prose ("{m.group(0).strip()}" in '
+                             f'"{line.strip()[:60]}") — drop it; tracker.md is the only home '
+                             f"(resume reads it from there, so a retelling can only drift)")
     return probs
 
 
@@ -2444,8 +2445,8 @@ def _demo():
     assert any("> 40" in x for x in _check_state("## Now\n" + "- line\n" * 41))
     # routine-in-STATE (session 42): the exact line session 41 shipped, plus the score-only form
     assert any("routine retold" in x for x in
-               _check_state("## Now\n- Рутина 31.07 закрыта Ромой без меня: комменты 3/3.\n"))
-    assert any("routine retold" in x for x in _check_state("## Now\n- connects 4/4 сегодня\n"))
+               _check_state("## Now\n- Рутина 31.07 закрыта Ромой без меня: комменты 3/3.\n", routine=True))
+    assert any("routine retold" in x for x in _check_state("## Now\n- connects 4/4 сегодня\n", routine=True))
     # skill names, log commands and Roma-without-a-score stay legal — else STATE can't plan
     assert _check_state("## Next\n- `/comments` первым: publish-путь не исполнялся\n") == []
     assert _check_state("## Open\n- залогировать пост: `tracker-log post=1/1`\n") == []
@@ -2883,9 +2884,10 @@ def resume_pack():
     print(state.rstrip())
 
     # daily routine tracker — the one block that is about TODAY, not about the last session
-    print("\n== РУТИНА ==")
-    for ln in tracker_report():
-        print(ln)
+    if TRACKER.is_file():
+        print("\n== РУТИНА ==")
+        for ln in tracker_report():
+            print(ln)
 
     # what the skills THEMSELVES last wrote — outranks any STATE line claiming a run did or
     # did not happen (session 42: prose said "живых ранов не было" over two run files)
