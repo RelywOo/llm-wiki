@@ -196,6 +196,20 @@ raise SystemExit(package.main(['apply', '--name', 'direct']))
                      'apply', '--name', 'direct')
         self.assertEqual(path.read_bytes(), saved)
 
+    def test_transaction_selfcheck_uses_its_own_state_fixture(self):
+        for content in ('# STATE\n\n## Open\n- Verification remains open.\n',
+                        '# STATE\n## Next\n' + '- Pending work.\n' * 38):
+            with self.subTest(lines=len(content.splitlines())):
+                (self.root/'.memory/STATE.md').write_text(content)
+                before = self.knowledge()
+                head = self.command(self.root, 'git', 'rev-parse', 'HEAD')
+                status = self.command(self.root, 'git', 'status', '--porcelain')
+                result = self.command(self.root, sys.executable, '.memory/tools/checkpoint_txn.py', 'selfcheck')
+                self.assertIn('selfcheck OK', result)
+                self.assertEqual(self.knowledge(), before)
+                self.assertEqual(self.command(self.root, 'git', 'rev-parse', 'HEAD'), head)
+                self.assertEqual(self.command(self.root, 'git', 'status', '--porcelain'), status)
+
     def test_upgrade_delivers_missing_files_without_changing_knowledge(self):
         # Model a committed older installation that has no package layer.
         for relative in ['.memory/tools/checkpoint_inventory.py', '.memory/checkpoint-inventory.md', '.memory/tools/checkpoint_collect.py', '.memory/tools/checkpoint_package.py', '.memory/checkpoint-package.md']:

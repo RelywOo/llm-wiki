@@ -1,7 +1,7 @@
 {
   "base_main": "38829ec08e792ef20ae7179062a98c24a210ed63",
   "work_branch": "simplify/system-cleanup",
-  "scope": "S01 through S03 only; no main integration or installed-project upgrade",
+  "scope": "Autonomous S04-S11 assessment and F01 repair in the work branch; no main integration or installed-project upgrade",
   "hypotheses": {
     "S01": {
       "title": "Keep only the accepted full-context Jev inventory path",
@@ -114,11 +114,13 @@
   "preexisting_findings": {
     "F01": {
       "title": "Transaction selfcheck assumes STATE contains a Now section",
-      "status": "observed_not_changed",
+      "status": "fixed_in_work_branch",
       "reproduced": "S02 baseline and S03 candidate",
       "effect": "Doctor or update can report a selfcheck failure for a valid STATE containing only Open",
       "owner": "code/wiki-init/templates/tree/.memory/tools/checkpoint_txn.py: selfcheck",
-      "scope": "Outside S03; existing validation limitation, not introduced by deduplicating probes"
+      "scope": "Outside S03; existing validation limitation, not introduced by deduplicating probes",
+      "changed": "Selfcheck initializes its own synthetic STATE before its disposable baseline commit; production transaction behavior and caller knowledge are unchanged",
+      "validation": "Public selfcheck succeeds for Open-only and 40-line STATE; caller bytes, HEAD and status remain unchanged"
     }
   }
 }

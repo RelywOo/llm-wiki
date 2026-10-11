@@ -454,6 +454,10 @@ def selfcheck() -> None:
         unrelated = project / "code" / "unrelated.txt"
         unrelated.parent.mkdir(exist_ok=True)
         unrelated.write_text("baseline\n", encoding="utf-8")
+        # Selfcheck inputs belong to this disposable fixture, not the caller's STATE.
+        # Valid projects can omit Now or already use the whole STATE line budget.
+        state = project / ".memory" / "STATE.md"
+        state.write_text("# STATE\n\n## Now\n- Synthetic transaction fixture.\n", encoding="utf-8")
         run("git", "add", "-A")
         run("git", "commit", "--no-verify", "-qm", "baseline")
         py = sys.executable
@@ -475,7 +479,6 @@ def selfcheck() -> None:
                  "code/txn-acceptance.txt"]
         run(py, ".memory/tools/checkpoint_txn.py", "begin", "--allow", *allow)
         journal = (project / ".git" / TXN_NAME / "manifest.json").read_bytes()
-        state = project / ".memory" / "STATE.md"
         state.write_text(state.read_text(encoding="utf-8").replace(
             "## Now\n", "## Now\n- transaction selfcheck\n", 1), encoding="utf-8")
         run(py, ".memory/tools/checkpoint_txn.py", "commit", "--block", "txn-selfcheck",
