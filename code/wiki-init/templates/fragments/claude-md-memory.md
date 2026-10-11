@@ -149,3 +149,26 @@ Last checkpoint = `git log -1 --format=%H -- .memory/STATE.md`.
 3. Surface contradictions explicitly — via the protocol (decision 0004): BOTH living pages get `contradicted: <other-slug>` frontmatter + a `> [!warning] CONTRADICTS [[other]]: <what conflicts>` callout up top. A page with shaky facts gets `confidence: low` frontmatter + a callout naming the gap. Decisions stay immutable — a contradicted decision is superseded, not marked. `structural.py flags` reports both markers; resume surfaces them.
 4. If asked something not in the wiki, say "not in wiki".
 5. Decisions are never edited — supersede forward (new file with `supersedes: <id>`); the active set is computed from frontmatter, not stored.
+
+
+## Inspection session mode
+A whole read-only inspection starts through the installed process launcher:
+`python .memory/tools/readonly_session.py --output /external/inspection -- <agent-or-command>`.
+The launcher reports `read-only` and enforces restrictions throughout its child process tree.
+Setting an environment variable or running resume alone does not activate enforcement.
+Memory, project and Git storage are read-only; only declared external output/profile directories
+and scratch space are writable. Use `--writable /external/profile` for a dedicated runtime
+profile and `--network` to enable Internet sockets when the model API needs them. Local UNIX
+service delegation stays blocked. Never use the project, Git directory, or their parent as
+writable storage. Linux x86_64/aarch64 and Landlock ABI 6+ are required; unsupported execution
+is refused. Do not infer that an ordinary parent agent session becomes restricted by running
+one child command through this launcher: start the whole session through it.
+Explicit permission, ownership, timestamp and extended-attribute changes are blocked globally,
+including output directories. Prepare runtime permissions before launching. New syscall
+families beyond the reviewed Linux syscall set are refused; this can limit runtime compatibility.
+System V IPC is blocked; ordinary pipes and child-owned socket pairs remain available.
+
+Reads and stdout work normally. Save inspection notes in the external output directory;
+repository artifact publication, checkpoint and project edits require a later ordinary
+write session. Existing unrelated writers are not frozen. Report actual failed writes and
+active mode instead of claiming that a verbal instruction alone protects memory.

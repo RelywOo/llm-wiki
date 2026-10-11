@@ -9,7 +9,7 @@ import time
 
 ROOT = Path(__file__).resolve().parent
 CODEX = Path.home()/'.local/bin/codex'
-def session(workspace, output, prompt, timeout=900, readonly=False, model="gpt-6-luna"):
+def session(workspace, output, prompt, timeout=900, readonly=False, model="gpt-6-luna", inspection=False):
     if model not in {'gpt-6-luna','gpt-6.1-sol'}:
         raise ValueError('evaluation model must be gpt-6-luna or gpt-6.1-sol')
     workspace, output = Path(workspace).resolve(), Path(output).resolve()
@@ -23,7 +23,7 @@ def session(workspace, output, prompt, timeout=900, readonly=False, model="gpt-6
     cache=Path.home()/'.codex/models_cache.json'
     if cache.exists(): shutil.copyfile(cache,profile/'models_cache.json')
     env = {k:v for k,v in os.environ.items() if k in {'HOME','USER','LOGNAME','LANG','LC_ALL','SSL_CERT_FILE','SSL_CERT_DIR'}}
-    env.update({'PATH':'/usr/local/bin:/usr/bin:/bin','CODEX_HOME':str(profile),'TMPDIR':str(profile/'tmp'),'PYTHONDONTWRITEBYTECODE':'1','GIT_CONFIG_NOSYSTEM':'1','GIT_CONFIG_GLOBAL':'/dev/null','PYTHONUNBUFFERED':'1'})
+    env.update({'PATH':'/usr/local/bin:/usr/bin:/bin','CODEX_HOME':str(profile),'XDG_CONFIG_HOME':str(profile/'config'),'TMPDIR':str(profile/'tmp'),'PYTHONDONTWRITEBYTECODE':'1','GIT_CONFIG_NOSYSTEM':'1','GIT_CONFIG_GLOBAL':'/dev/null','PYTHONUNBUFFERED':'1'})
     # Wiki hooks use "python". Provide only this alias and the Codex launcher in PATH.
     (profile/'bin').mkdir(exist_ok=True)
     python_alias=profile/'bin/python'
@@ -31,6 +31,10 @@ def session(workspace, output, prompt, timeout=900, readonly=False, model="gpt-6
     env['PATH']=str(profile/'bin')+':'+env['PATH']
     cmd=['python3',str(ROOT/'isolate.py'),'--workspace',str(workspace),'--profile',str(profile)]
     if readonly: cmd += ['--readonly']
+    if inspection:
+        # The evaluation isolate hides oracles; the product launcher enforces writes.
+        cmd += ['--','python3',str(workspace/'.memory/tools/readonly_session.py'),
+                '--root',str(workspace),'--output',str(profile),'--network']
     cmd += ['--',str(CODEX),'exec','--ignore-user-config','--ignore-rules','--ephemeral','--json','--color','never','--skip-git-repo-check','--dangerously-bypass-approvals-and-sandbox','--dangerously-bypass-hook-trust','-C',str(workspace),'-m',model,'-c','model_reasoning_effort="medium"','-c','web_search="disabled"','-c','features.shell_snapshot=false','-c','features.multi_agent=false','-c','features.memories=false','-c','features.plugins=false','-c','features.apps=false','-']
     (output/'prompt.txt').write_text(prompt)
     (output/'command.json').write_text(json.dumps(cmd,indent=2))

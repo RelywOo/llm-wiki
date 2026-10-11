@@ -75,6 +75,7 @@ ROLES = {
     ".memory/wiki/concepts/.gitkeep": "living concept pages live here",
     ".memory/wiki/decisions/.gitkeep": "immutable decisions live here",
     "code/.gitkeep": "ALL project source code goes under code/",
+    ".memory/tools/readonly_session.py": "Linux kernel-enforced inspection process launcher",
     ".memory/tools/structural.py": "non-LLM structural pass (active/section/search/guard/doctor)",
     ".memory/tools/dual_sync.py": "generates enabled runtime instructions and commands",
     ".memory/tools/checkpoint_package.py": "persistent checkpoint edits with pre-write format and freshness checks",

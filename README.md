@@ -104,6 +104,18 @@ Legacy prose is preserved and requires a source-reviewed migration before it bec
 structured task record. See [memory reliability](docs/memory-reliability.md) for the event
 contract, regression coverage, tradeoffs, and measured limitations.
 
+For an enforced inspection, start the whole agent process through the installed launcher:
+
+```sh
+python .memory/tools/readonly_session.py --output /external/inspection -- <agent-command>
+```
+
+This requires Linux x86_64/aarch64 with Landlock ABI 6+. Project files and Git storage are
+protected throughout the child process tree. Output must be outside the project and its Git
+storage; use `--writable` for an external runtime profile and `--network` when needed.
+Metadata changes and System V IPC are blocked globally. Existing writers and remote actions
+remain outside this local process boundary. See [stage two](docs/memory-reliability-phase2.md).
+
 ## Update an installed project
 
 ```sh
