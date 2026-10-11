@@ -137,9 +137,11 @@ Steps:
    any mistake.
 5. Do NOT edit `log.md` yourself. The package contains the chosen outcome summary and
    block; the coordinator computes the next session and appends exactly one line.
-6. PREFLIGHT + TAIL — run:
-   `python .memory/tools/checkpoint_package.py check --name session-<N>`
-   then `python .memory/tools/checkpoint_package.py apply --name session-<N>`.
+6. VALIDATE AND SAVE — run:
+   `python .memory/tools/checkpoint_package.py apply --name session-<N>`.
+   An optional read-only preview is available through
+   `python .memory/tools/checkpoint_package.py check --name session-<N>`;
+   it is not required before `apply` and does not replace semantic draft review.
    The helper checks format, unique file operations, edit anchors and baseline/file
    freshness before writes, and checks again after BEGIN. It invokes the existing
    coordinator for compact, allowlisted private-index staging, structural guard,

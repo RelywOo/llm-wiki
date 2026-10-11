@@ -6,8 +6,8 @@ check --name NAME
 apply --name NAME
 
 init prints the JSON package path in Git metadata. Read the target files, fill in
-the package's operations, then check/apply. Failed checks and rolled-back commits
-leave the package intact. See .memory/checkpoint-package.md for the schema.
+the package's operations, then apply. Use check for an optional read-only preview.
+Failed checks and rolled-back commits leave the package intact. See .memory/checkpoint-package.md for the schema.
 """
 from __future__ import annotations
 
@@ -287,7 +287,7 @@ def main(argv=None):
         root = Path(__file__).resolve().parents[2]
         if args.command == 'init':
             path = initialize(root, args.name, args.block, args.summary, args.allow)
-            print(f'checkpoint package: {path}\nFill in its operations, then check/apply. Targets are unchanged.')
+            print(f'checkpoint package: {path}\nFill in its operations, then apply (check is an optional read-only preview). Targets are unchanged.')
         else:
             package = load(root, args.name)
             if args.command == 'check':

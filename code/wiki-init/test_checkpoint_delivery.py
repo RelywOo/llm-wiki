@@ -1,5 +1,6 @@
 """Verify shared checkpoint package delivery using disposable repositories."""
 import json
+import shutil
 from pathlib import Path
 import subprocess
 import sys
@@ -69,6 +70,131 @@ class DeliveryTest(unittest.TestCase):
         self.assertEqual(path.read_bytes(), saved)
         self.command(self.root, sys.executable, '.memory/tools/structural.py', 'resume')
         self.command(self.root, sys.executable, '.memory/tools/checkpoint_package.py', 'apply', '--name', 'first', expected=2)
+
+    def prepare_draft(self, name='direct', extra=()):
+        self.command(self.root, sys.executable, '.memory/tools/checkpoint_package.py', 'init',
+                     '--name', name, '--block', 'Direct application', '--summary', 'Save fixture state',
+                     '--allow', *extra)
+        path = self.root/f'.git/wiki-checkpoint-packages/{name}.json'
+        package = json.loads(path.read_text())
+        state = next(e for e in package['files'] if e['path'] == '.memory/STATE.md')
+        state.update(action='write', content='# STATE\n\n## Now\n- Direct application fixture saved.\n')
+        path.write_text(json.dumps(package))
+        return path, package
+
+    def test_direct_apply_matches_optional_preview_then_apply(self):
+        path, _ = self.prepare_draft()
+        saved = path.read_bytes()
+        preview = self.root.parent/(self.root.name+'-preview')
+        self.addCleanup(shutil.rmtree, preview, ignore_errors=True)
+        shutil.copytree(self.root, preview)
+        # The cloned fixture owns this copied absolute hook setting. Relocate it.
+        self.command(preview, 'git', 'config', '--unset', 'core.hooksPath')
+        self.command(preview, sys.executable, '.memory/tools/install_hooks.py')
+        before = self.knowledge()
+        self.command(preview, sys.executable, '.memory/tools/checkpoint_package.py',
+                     'check', '--name', 'direct')
+        for relative, content in before.items():
+            self.assertEqual((preview/relative).read_bytes(), content)
+        self.command(preview, sys.executable, '.memory/tools/checkpoint_package.py',
+                     'apply', '--name', 'direct')
+        self.command(self.root, sys.executable, '.memory/tools/checkpoint_package.py',
+                     'apply', '--name', 'direct')
+        for relative, content in self.knowledge().items():
+            self.assertEqual((preview/relative).read_bytes(), content)
+        self.assertEqual(path.read_bytes(), saved)
+        self.assertEqual((preview/'.git/wiki-checkpoint-packages/direct.json').read_bytes(), saved)
+        self.assertFalse((self.root/'.git/wiki-checkpoint-txn').exists())
+        self.command(self.root, sys.executable, '.memory/tools/checkpoint_package.py',
+                     'apply', '--name', 'direct', expected=2)
+
+    def test_direct_apply_rejects_invalid_draft_without_writes(self):
+        path, package = self.prepare_draft()
+        state = next(e for e in package['files'] if e['path'] == '.memory/STATE.md')
+        state['content'] = '# STATE\n\n## Noncanonical section\n- Invalid.\n'
+        path.write_text(json.dumps(package))
+        before = self.knowledge(); saved = path.read_bytes()
+        head = self.command(self.root, 'git', 'rev-parse', 'HEAD')
+        self.command(self.root, sys.executable, '.memory/tools/checkpoint_package.py',
+                     'apply', '--name', 'direct', expected=2)
+        self.assertEqual(self.knowledge(), before)
+        self.assertEqual(path.read_bytes(), saved)
+        self.assertEqual(self.command(self.root, 'git', 'rev-parse', 'HEAD'), head)
+        self.assertFalse((self.root/'.git/wiki-checkpoint-txn').exists())
+
+    def test_direct_apply_rejects_stale_target_and_head(self):
+        path, _ = self.prepare_draft()
+        state = self.root/'.memory/STATE.md'
+        original = state.read_bytes()
+        state.write_text('# STATE\n\n## Now\n- Concurrent edit.\n')
+        before = self.knowledge(); saved = path.read_bytes()
+        self.command(self.root, sys.executable, '.memory/tools/checkpoint_package.py',
+                     'apply', '--name', 'direct', expected=2)
+        self.assertEqual(self.knowledge(), before)
+        state.write_bytes(original)
+        self.command(self.root, 'git', 'commit', '--allow-empty', '-qm', 'Move baseline')
+        before = self.knowledge()
+        head = self.command(self.root, 'git', 'rev-parse', 'HEAD')
+        self.command(self.root, sys.executable, '.memory/tools/checkpoint_package.py',
+                     'apply', '--name', 'direct', expected=2)
+        self.assertEqual(self.knowledge(), before)
+        self.assertEqual(path.read_bytes(), saved)
+        self.assertEqual(self.command(self.root, 'git', 'rev-parse', 'HEAD'), head)
+        self.assertFalse((self.root/'.git/wiki-checkpoint-txn').exists())
+
+    def test_direct_apply_rechecks_after_begin_and_preserves_concurrent_edit(self):
+        path, _ = self.prepare_draft()
+        saved = path.read_bytes(); before = self.knowledge()
+        script = """import sys
+from pathlib import Path
+sys.path.insert(0, str(Path('.memory/tools').resolve()))
+import checkpoint_package as package
+begin = package.txn.begin
+def concurrent_begin(root, allow):
+    begin(root, allow)
+    (root / '.memory/STATE.md').write_text('# STATE\\n\\n## Now\\n- Concurrent edit after BEGIN.\\n')
+package.txn.begin = concurrent_begin
+raise SystemExit(package.main(['apply', '--name', 'direct']))
+"""
+        self.command(self.root, sys.executable, '-c', script, expected=2)
+        before['.memory/STATE.md'] = b'# STATE\n\n## Now\n- Concurrent edit after BEGIN.\n'
+        self.assertEqual(self.knowledge(), before)
+        self.assertEqual(path.read_bytes(), saved)
+        self.assertFalse((self.root/'.git/wiki-checkpoint-txn').exists())
+
+    def test_direct_apply_rolls_back_guard_failure_and_retains_draft(self):
+        target = '.memory/wiki/concepts/unsupported.md'
+        path, package = self.prepare_draft(extra=(target,))
+        entry = next(e for e in package['files'] if e['path'] == target)
+        entry.update(action='write', content='# Unsupported\n\n## Claim\nInvented claim without a source.\n')
+        path.write_text(json.dumps(package))
+        saved = path.read_bytes(); before = self.knowledge()
+        head = self.command(self.root, 'git', 'rev-parse', 'HEAD')
+        self.command(self.root, sys.executable, '.memory/tools/checkpoint_package.py',
+                     'apply', '--name', 'direct', expected=2)
+        self.assertEqual(self.knowledge(), before)
+        self.assertEqual(path.read_bytes(), saved)
+        self.assertEqual(self.command(self.root, 'git', 'rev-parse', 'HEAD'), head)
+        self.assertFalse((self.root/target).exists())
+        self.assertFalse((self.root/'.git/wiki-checkpoint-txn').exists())
+
+    def test_direct_apply_requires_recovery_of_interrupted_transaction(self):
+        path, _ = self.prepare_draft()
+        saved = path.read_bytes(); before = self.knowledge()
+        self.command(self.root, sys.executable, '.memory/tools/checkpoint_txn.py', 'begin',
+                     '--allow', '.memory/STATE.md', '.memory/wiki/index.md', '.memory/wiki/log.md')
+        (self.root/'.memory/STATE.md').write_text('# STATE\n\n## Now\n- Interrupted write.\n')
+        interrupted = self.knowledge()
+        self.command(self.root, sys.executable, '.memory/tools/checkpoint_package.py',
+                     'apply', '--name', 'direct', expected=2)
+        self.assertEqual(self.knowledge(), interrupted)
+        self.assertTrue((self.root/'.git/wiki-checkpoint-txn').exists())
+        self.command(self.root, sys.executable, '.memory/tools/checkpoint_txn.py', 'recover')
+        self.assertEqual(self.knowledge(), before)
+        self.assertEqual(path.read_bytes(), saved)
+        self.command(self.root, sys.executable, '.memory/tools/checkpoint_package.py',
+                     'apply', '--name', 'direct')
+        self.assertEqual(path.read_bytes(), saved)
 
     def test_upgrade_delivers_missing_files_without_changing_knowledge(self):
         # Model a committed older installation that has no package layer.

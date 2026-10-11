@@ -81,5 +81,6 @@ the input and helper hashes and records timing/usage.
 
 Jev labels are judgments, not proof of external facts. Resolve uncertainty only as far
 as source evidence permits; preserve unfinished questions in STATE where appropriate.
-Then use package check/apply and the normal checkpoint report. Generate source-backed
+Then use package `apply` and the normal checkpoint report; a separate package `check`
+is an optional read-only preview. Generate source-backed
 dropped-item accounting from the inventory; do not silently omit unresolved items.

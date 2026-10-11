@@ -51,14 +51,18 @@ paths, symlinks, stale files, bad edit anchors and invalid formats are rejected.
 ## Validate and save
 
 ```sh
-python .memory/tools/checkpoint_package.py check --name session-6
 python .memory/tools/checkpoint_package.py apply --name session-6
 ```
 
-`check` is read-only and renders proposed edits in memory. `apply` repeats those
-checks, starts the existing allowlisted transaction, checks freshness again, writes
+`apply` validates and renders proposed edits in memory before any target writes,
+starts the existing allowlisted transaction, checks freshness again, writes
 the prepared edits, then invokes the existing commit coordinator. It owns BEGIN,
 log append and TAIL: do not also run them manually. It never edits the package.
+
+For an optional read-only preview, run
+`python .memory/tools/checkpoint_package.py check --name session-6`.
+This is not required before `apply`; it performs the same initial validation without
+starting a transaction or saving changes. Neither command replaces semantic draft review.
 
 If preflight fails, no target files have been written. Correct the offending JSON
 entry and retry. If a commit validator fails, the coordinator restores protected

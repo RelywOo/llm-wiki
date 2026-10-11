@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Frozen background checkpoint jobs; native thread creation stays with the Codex app.
 
-prepare -> bind (native worktree) -> attach -> ordinary check/apply -> ready -> publish
+prepare -> bind (native worktree) -> attach -> ordinary apply -> ready -> publish
 Only the originating thread publishes. No merge, blind rebase, or credential copying.
 """
 from __future__ import annotations

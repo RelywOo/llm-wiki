@@ -79,17 +79,18 @@ and `source.md`; never assume `.git` is a directory in a worktree.
   items and source uncertainty, especially “not established” versus “ruled out.”
   Review the drafted meaning against the sources; mechanical guards are not a
   semantic correctness proof.
-- Before normal package check/apply, run:
+- Attach the frozen sources, apply the package, then seal the worker commit:
 
   ```sh
   python .memory/tools/checkpoint_background.py attach --package PACKAGE
-  python .memory/tools/checkpoint_package.py check --name PACKAGE
   python .memory/tools/checkpoint_package.py apply --name PACKAGE
   python .memory/tools/checkpoint_background.py ready --package PACKAGE
   ```
 
   Attach adds the source archive and transcript cursor. Do not edit those generated
-  entries. If the package needs repair, preserve unchanged entries; normal rollback
+  entries. Package `apply` performs its own validation; a separate package `check`
+  is an optional read-only preview and does not replace semantic draft review.
+  If the package needs repair, preserve unchanged entries; normal rollback
   and recovery rules still apply. `ready` verifies the package against the actual
   validated worker commit and seals a publication copy. It never publishes live.
 - Send the originating thread a notification using the Codex app's

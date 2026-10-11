@@ -1,7 +1,7 @@
 {
   "base_main": "38829ec08e792ef20ae7179062a98c24a210ed63",
   "work_branch": "simplify/system-cleanup",
-  "scope": "S01 only; no main integration or installed-project upgrade",
+  "scope": "S01 and S02 only; no main integration or installed-project upgrade",
   "hypotheses": {
     "S01": {
       "title": "Keep only the accepted full-context Jev inventory path",
@@ -31,7 +31,26 @@
     },
     "S02": {
       "title": "Make apply the only mandatory technical package application step",
-      "status": "proposed"
+      "status": "verified_in_work_branch",
+      "changed": "Foreground, background and Jev instructions plus CLI guidance use apply as the required save step; check remains an optional read-only preview",
+      "preserved": "Package checks before BEGIN and after BEGIN, source review, pinned guards, rollback, recovery, draft retention and background publication preconditions",
+      "runtime_logic": "Unchanged; complete Python ASTs match the S01 baseline after normalizing module documentation and the init message",
+      "validation": {
+        "new_direct_apply_tests": 6,
+        "paired_fresh_sessions": 4,
+        "paired_synthetic_cases": 2,
+        "baseline_checkpoints_saved": 2,
+        "candidate_checkpoints_saved": 2,
+        "paired_source_scope_review": "passed for the tested claims",
+        "updater_selfcheck": "passed",
+        "distribution_check": "passed",
+        "regression": "104 passed in full run; sole fixture setup failure corrected and rerun successfully",
+        "tests_passed_after_fixture_correction": 105,
+        "systemd_tests_skipped": 5,
+        "runtime_combinations_passed": 8,
+        "optional_preview_delivery_tests": "preserved"
+      },
+      "limitation": "Two synthetic pairs are a smoke comparison, not proof of accuracy or speed superiority. The candidate still chose optional check in one case. Both partial-scope sessions repaired missing source markers after a guard refusal; raw failures are retained. Native background app orchestration was not exercised."
     },
     "S03": {
       "title": "Own harmful-write probes in one doctor health path",
