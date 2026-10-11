@@ -6,13 +6,11 @@ You are running `wiki-resume`. Goal: get fully in context for this project witho
 the user re-explaining anything. Write nothing — this is read-only. Do not modify any file.
 
 Steps:
-0. Run `python .memory/tools/checkpoint_watchdog.py prompt` if that helper exists.
-   This is read-only. Surface pending checkpoint notices or unhealthy supervision
-   alongside the resume summary, including when STATE is idle. Never infer that a
-   checkpoint succeeded from an absent worker message. Do not acknowledge notices
-   during this read-only resume; reporting them does not authorize recovery writes.
 1. Run `python .memory/tools/structural.py resume` — ONE call, the whole loader. It prints
-   a labeled pack: STATE.md, overview "State of the project" + "Open threads", active
+   pending checkpoint notices or unhealthy supervision before the memory pack, even
+   when STATE is idle. Report these notices; do not acknowledge, recover or publish
+   during this read-only resume. An absent worker message is not proof of success.
+   It also prints a labeled pack: STATE.md, overview "State of the project" + "Open threads", active
    decisions paired with summaries (newest-first), flags, checkpoint + commits after it,
    change-frontier, stale pages, and the Pointers list. Everything in the pack is now your
    working context — it BINDS you silently (active decisions, tried-rejected, flags —
@@ -20,6 +18,7 @@ Steps:
    FALLBACK if the `resume` subcommand is absent (older clone): assemble the same pack by
    hand — Read `.memory/STATE.md`; `structural.py section/active/flags` (see
    `structural.py help`); `git log -1 --format=%H -- .memory/STATE.md` + commits after it.
+   In that older-clone fallback, also run `checkpoint_watchdog.py prompt` if present.
 2. IDLE branch: if the pack prints `== IDLE — no active task ==`, report "No active task.
    We last finished <the task-done summary>." Omit the second sentence if no completed
    task is recorded. Do not invent an unfinished step or ask what to start. Stop.

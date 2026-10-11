@@ -233,6 +233,39 @@ raise SystemExit(package.main(['apply', '--name', 'direct']))
         self.command(self.root, sys.executable, '.memory/tools/structural.py', 'tracker')
         self.assertEqual(tracker.read_bytes(), saved)
 
+    def test_resume_notices_are_read_only_and_outside_pack_budget(self):
+        monitor = self.root/'.git/wiki-background-monitor'
+        self.command(self.root, sys.executable, '.memory/tools/structural.py', 'resume')
+        self.assertFalse(monitor.exists())
+        idle = (self.root/'.memory/STATE.md').read_text()
+        for state in (idle, '# STATE\n\n## Now\n- Continue the fixture.\n'):
+            with self.subTest(idle=state == idle):
+                if monitor.exists():
+                    shutil.rmtree(monitor)
+                (self.root/'.memory/STATE.md').write_text(state)
+                baseline = self.command(self.root, sys.executable, '.memory/tools/structural.py', 'pack-budget')
+                monitor.mkdir()
+                registration = monitor/'registration.json'
+                inbox = monitor/'state.json'
+                registration.write_text('{}')  # Missing heartbeat must remain visible.
+                inbox.write_text(json.dumps({'schema': 1, 'observations': {}, 'events': {
+                    'N1': {'id': 'N1', 'job': 'J1', 'message': 'Synthetic pending notice',
+                           'active': True, 'acknowledged': False}}}))
+                saved = inbox.read_bytes(); before = self.knowledge()
+                output = self.command(self.root, sys.executable, '.memory/tools/structural.py', 'resume')
+                self.assertIn('Synthetic pending notice', output)
+                self.assertIn('watchdog is not healthy', output)
+                self.assertIn('== STATE', output)
+                self.assertEqual(inbox.read_bytes(), saved)
+                self.assertEqual(registration.read_text(), '{}')
+                self.assertEqual(self.knowledge(), before)
+                self.assertEqual(self.command(self.root, sys.executable, '.memory/tools/structural.py', 'pack-budget'), baseline)
+                inbox.write_text('{bad JSON')
+                output = self.command(self.root, sys.executable, '.memory/tools/structural.py', 'resume')
+                self.assertIn('pending notices could not be read', output)
+                self.assertIn('== STATE', output)
+                self.assertEqual(inbox.read_text(), '{bad JSON')
+
     def test_upgrade_delivers_missing_files_without_changing_knowledge(self):
         # Model a committed older installation that has no package layer.
         for relative in ['.memory/tools/checkpoint_inventory.py', '.memory/checkpoint-inventory.md', '.memory/tools/checkpoint_collect.py', '.memory/tools/checkpoint_package.py', '.memory/checkpoint-package.md']:

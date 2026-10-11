@@ -2942,6 +2942,20 @@ def resume_pack():
         print("(no [[links]] in STATE Pointers)")
 
 
+def resume():
+    """Public loader: supervision notices are outside the budgeted memory pack."""
+    root = WIKI.parents[1]
+    try:
+        from checkpoint_watchdog import prompt_notice
+        notice = prompt_notice(root)
+        if notice:
+            print(notice)
+    except (OSError, ValueError, KeyError, TypeError, GitCommandError):
+        print("CHECKPOINT SUPERVISION: pending notices could not be read. "
+              "Inspect checkpoint_watchdog.py health; silence is not proof of a saved checkpoint.")
+    resume_pack()
+
+
 def checkpoint_pack():
     """One-call /wiki-checkpoint write-side recon: RECON delta + COMPUTED fills ONLY.
 
@@ -3044,7 +3058,7 @@ def _dispatch(argv):
         raise CliUsageError("usage: structural.py [report]")
 
     if cmd == "resume":
-        _integrity_cli("resume", resume_pack)
+        _integrity_cli("resume", resume)
     elif cmd == "checkpoint":
         _integrity_cli("checkpoint", checkpoint_pack)
     elif cmd == "active":

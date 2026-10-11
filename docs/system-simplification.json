@@ -91,7 +91,14 @@
     },
     "S05": {
       "title": "Collect resume context and watchdog notices through one entry point",
-      "status": "proposed"
+      "status": "verified_in_work_branch",
+      "changed": "Public resume wrapper reads supervision notices before rendering the existing memory pack; normal resume instructions have one command",
+      "preserved": "Idle and active warnings, read-only inbox/registration, other-turn prompt notices, old-clone fallback, unchanged pack_size and resume_pack budget calculation",
+      "validation": {
+        "focused_integration": "passed; absent watchdog creates no files, pending notice and degraded health visible in idle/active, corrupt inbox reported, notice bytes unchanged, pack-budget output identical",
+        "final_regression": "pending"
+      },
+      "limitation": "Native user-systemd delivery is not exercised by the synthetic notice test."
     },
     "S06": {
       "title": "Give procedural rules one primary document owner",
