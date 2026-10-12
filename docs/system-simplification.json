@@ -117,7 +117,17 @@
     },
     "S07": {
       "title": "Provide a small interface for candidate shape validation",
-      "status": "proposed"
+      "status": "verified_in_work_branch",
+      "changed": "memory_formats owns existing navigation/format primitives and candidate shape orchestration; package calls one validator; structural CLI keeps compatibility aliases",
+      "preserved": "Exact validator function ASTs and error order, generic/legacy profile distinction, IDs/index/STATE/overview budgets, all baseline/staging/source/rollback checks remain with their existing owners",
+      "validation": {
+        "differential_candidates": 72,
+        "moved_functions_AST_identical": 10,
+        "focused_format_tests": 2,
+        "package_integration_tests": 3,
+        "final_regression": "pending"
+      },
+      "limitation": "The new module validates shape; it is not a semantic evidence checker or a replacement for any Git guard."
     },
     "S08": {
       "title": "Parse the decision graph through one consistent implementation",

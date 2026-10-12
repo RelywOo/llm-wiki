@@ -1,0 +1,225 @@
+{
+  "baseline": "172b209",
+  "cases": [
+    {
+      "tracker": false,
+      "outputs": {
+        ".memory/STATE.md": "# STATE\n## Now\n- PostgreSQL checks: 3/5.\n",
+        ".memory/wiki/index.md": "# Index\n## Decisions\n(none yet)\n",
+        ".memory/wiki/overview.md": "# Overview\n## Open threads\n- unsupported thread\n"
+      },
+      "errors": [
+        "overview.md: Open-threads entry must be an index line `- [[owner]] — hook` (fact lives on the page): - unsupported thread"
+      ]
+    },
+    {
+      "tracker": false,
+      "outputs": {
+        ".memory/STATE.md": "# STATE\n## Now\n- PostgreSQL checks: 3/5.\n",
+        ".memory/wiki/index.md": "# Index\n## Decisions\n(none yet)\n## Decisions\n(none yet)\n",
+        ".memory/wiki/overview.md": "# Overview\n## Open threads\n- unsupported thread\n"
+      },
+      "errors": [
+        "missing or duplicate exact `## Decisions` section",
+        "overview.md: Open-threads entry must be an index line `- [[owner]] — hook` (fact lives on the page): - unsupported thread"
+      ]
+    },
+    {
+      "tracker": false,
+      "outputs": {
+        ".memory/STATE.md": "# STATE\n## Now\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n",
+        ".memory/wiki/index.md": "# Index\n## Decisions\n(none yet)\n",
+        ".memory/wiki/overview.md": "# Overview\n## Open threads\n- unsupported thread\n"
+      },
+      "errors": [
+        "overview.md: Open-threads entry must be an index line `- [[owner]] — hook` (fact lives on the page): - unsupported thread"
+      ]
+    },
+    {
+      "tracker": false,
+      "outputs": {
+        ".memory/STATE.md": "# STATE\n## Now\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n",
+        ".memory/wiki/index.md": "# Index\n## Decisions\n(none yet)\n## Decisions\n(none yet)\n",
+        ".memory/wiki/overview.md": "# Overview\n## Open threads\n- unsupported thread\n"
+      },
+      "errors": [
+        "missing or duplicate exact `## Decisions` section",
+        "overview.md: Open-threads entry must be an index line `- [[owner]] — hook` (fact lives on the page): - unsupported thread"
+      ]
+    },
+    {
+      "tracker": false,
+      "outputs": {
+        ".memory/STATE.md": "# STATE\n## Now\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n",
+        ".memory/wiki/index.md": "# Index\n## Decisions\n(none yet)\n",
+        ".memory/wiki/overview.md": "# Overview\n## Open threads\n- unsupported thread\n"
+      },
+      "errors": [
+        "STATE.md: 43 lines > 40 — graduate permanent facts to a wiki page",
+        "overview.md: Open-threads entry must be an index line `- [[owner]] — hook` (fact lives on the page): - unsupported thread"
+      ]
+    },
+    {
+      "tracker": false,
+      "outputs": {
+        ".memory/STATE.md": "# STATE\n## Now\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n",
+        ".memory/wiki/index.md": "# Index\n## Decisions\n(none yet)\n## Decisions\n(none yet)\n",
+        ".memory/wiki/overview.md": "# Overview\n## Open threads\n- unsupported thread\n"
+      },
+      "errors": [
+        "STATE.md: 43 lines > 40 — graduate permanent facts to a wiki page",
+        "missing or duplicate exact `## Decisions` section",
+        "overview.md: Open-threads entry must be an index line `- [[owner]] — hook` (fact lives on the page): - unsupported thread"
+      ]
+    },
+    {
+      "tracker": false,
+      "outputs": {
+        ".memory/STATE.md": "# STATE\n## Open\n- PostgreSQL checks: 3/5.\n",
+        ".memory/wiki/index.md": "# Index\n## Decisions\n(none yet)\n",
+        ".memory/wiki/overview.md": "# Overview\n## Open threads\n- unsupported thread\n"
+      },
+      "errors": [
+        "overview.md: Open-threads entry must be an index line `- [[owner]] — hook` (fact lives on the page): - unsupported thread"
+      ]
+    },
+    {
+      "tracker": false,
+      "outputs": {
+        ".memory/STATE.md": "# STATE\n## Open\n- PostgreSQL checks: 3/5.\n",
+        ".memory/wiki/index.md": "# Index\n## Decisions\n(none yet)\n## Decisions\n(none yet)\n",
+        ".memory/wiki/overview.md": "# Overview\n## Open threads\n- unsupported thread\n"
+      },
+      "errors": [
+        "missing or duplicate exact `## Decisions` section",
+        "overview.md: Open-threads entry must be an index line `- [[owner]] — hook` (fact lives on the page): - unsupported thread"
+      ]
+    },
+    {
+      "tracker": false,
+      "outputs": {
+        ".memory/STATE.md": "# STATE\n## Open\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n",
+        ".memory/wiki/index.md": "# Index\n## Decisions\n(none yet)\n",
+        ".memory/wiki/overview.md": "# Overview\n## Open threads\n- unsupported thread\n"
+      },
+      "errors": [
+        "overview.md: Open-threads entry must be an index line `- [[owner]] — hook` (fact lives on the page): - unsupported thread"
+      ]
+    },
+    {
+      "tracker": false,
+      "outputs": {
+        ".memory/STATE.md": "# STATE\n## Open\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n",
+        ".memory/wiki/index.md": "# Index\n## Decisions\n(none yet)\n## Decisions\n(none yet)\n",
+        ".memory/wiki/overview.md": "# Overview\n## Open threads\n- unsupported thread\n"
+      },
+      "errors": [
+        "missing or duplicate exact `## Decisions` section",
+        "overview.md: Open-threads entry must be an index line `- [[owner]] — hook` (fact lives on the page): - unsupported thread"
+      ]
+    },
+    {
+      "tracker": false,
+      "outputs": {
+        ".memory/STATE.md": "# STATE\n## Open\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n",
+        ".memory/wiki/index.md": "# Index\n## Decisions\n(none yet)\n",
+        ".memory/wiki/overview.md": "# Overview\n## Open threads\n- unsupported thread\n"
+      },
+      "errors": [
+        "STATE.md: 43 lines > 40 — graduate permanent facts to a wiki page",
+        "overview.md: Open-threads entry must be an index line `- [[owner]] — hook` (fact lives on the page): - unsupported thread"
+      ]
+    },
+    {
+      "tracker": false,
+      "outputs": {
+        ".memory/STATE.md": "# STATE\n## Open\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n",
+        ".memory/wiki/index.md": "# Index\n## Decisions\n(none yet)\n## Decisions\n(none yet)\n",
+        ".memory/wiki/overview.md": "# Overview\n## Open threads\n- unsupported thread\n"
+      },
+      "errors": [
+        "STATE.md: 43 lines > 40 — graduate permanent facts to a wiki page",
+        "missing or duplicate exact `## Decisions` section",
+        "overview.md: Open-threads entry must be an index line `- [[owner]] — hook` (fact lives on the page): - unsupported thread"
+      ]
+    },
+    {
+      "tracker": false,
+      "outputs": {
+        ".memory/STATE.md": "# STATE\n## Nowhere\n- PostgreSQL checks: 3/5.\n",
+        ".memory/wiki/index.md": "# Index\n## Decisions\n(none yet)\n",
+        ".memory/wiki/overview.md": "# Overview\n## Open threads\n- unsupported thread\n"
+      },
+      "errors": [
+        "STATE.md: non-canonical section \"## Nowhere\" — fold into Now/Next/Tried & rejected/Open/Pointers",
+        "overview.md: Open-threads entry must be an index line `- [[owner]] — hook` (fact lives on the page): - unsupported thread"
+      ]
+    },
+    {
+      "tracker": false,
+      "outputs": {
+        ".memory/STATE.md": "# STATE\n## Nowhere\n- PostgreSQL checks: 3/5.\n",
+        ".memory/wiki/index.md": "# Index\n## Decisions\n(none yet)\n## Decisions\n(none yet)\n",
+        ".memory/wiki/overview.md": "# Overview\n## Open threads\n- unsupported thread\n"
+      },
+      "errors": [
+        "STATE.md: non-canonical section \"## Nowhere\" — fold into Now/Next/Tried & rejected/Open/Pointers",
+        "missing or duplicate exact `## Decisions` section",
+        "overview.md: Open-threads entry must be an index line `- [[owner]] — hook` (fact lives on the page): - unsupported thread"
+      ]
+    },
+    {
+      "tracker": false,
+      "outputs": {
+        ".memory/STATE.md": "# STATE\n## Nowhere\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n",
+        ".memory/wiki/index.md": "# Index\n## Decisions\n(none yet)\n",
+        ".memory/wiki/overview.md": "# Overview\n## Open threads\n- unsupported thread\n"
+      },
+      "errors": [
+        "STATE.md: non-canonical section \"## Nowhere\" — fold into Now/Next/Tried & rejected/Open/Pointers",
+        "overview.md: Open-threads entry must be an index line `- [[owner]] — hook` (fact lives on the page): - unsupported thread"
+      ]
+    },
+    {
+      "tracker": false,
+      "outputs": {
+        ".memory/STATE.md": "# STATE\n## Nowhere\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n",
+        ".memory/wiki/index.md": "# Index\n## Decisions\n(none yet)\n## Decisions\n(none yet)\n",
+        ".memory/wiki/overview.md": "# Overview\n## Open threads\n- unsupported thread\n"
+      },
+      "errors": [
+        "STATE.md: non-canonical section \"## Nowhere\" — fold into Now/Next/Tried & rejected/Open/Pointers",
+        "missing or duplicate exact `## Decisions` section",
+        "overview.md: Open-threads entry must be an index line `- [[owner]] — hook` (fact lives on the page): - unsupported thread"
+      ]
+    },
+    {
+      "tracker": false,
+      "outputs": {
+        ".memory/STATE.md": "# STATE\n## Nowhere\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n",
+        ".memory/wiki/index.md": "# Index\n## Decisions\n(none yet)\n",
+        ".memory/wiki/overview.md": "# Overview\n## Open threads\n- unsupported thread\n"
+      },
+      "errors": [
+        "STATE.md: non-canonical section \"## Nowhere\" — fold into Now/Next/Tried & rejected/Open/Pointers",
+        "STATE.md: 43 lines > 40 — graduate permanent facts to a wiki page",
+        "overview.md: Open-threads entry must be an index line `- [[owner]] — hook` (fact lives on the page): - unsupported thread"
+      ]
+    },
+    {
+      "tracker": false,
+      "outputs": {
+        ".memory/STATE.md": "# STATE\n## Nowhere\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n- PostgreSQL checks: 3/5.\n",
+        ".memory/wiki/index.md": "# Index\n## Decisions\n(none yet)\n## Decisions\n(none yet)\n",
+        ".memory/wiki/overview.md": "# Overview\n## Open threads\n- unsupported thread\n"
+      },
+      "errors": [
+        "STATE.md: non-canonical section \"## Nowhere\" — fold into Now/Next/Tried & rejected/Open/Pointers",
+        "STATE.md: 43 lines > 40 — graduate permanent facts to a wiki page",
+        "missing or duplicate exact `## Decisions` section",
+        "overview.md: Open-threads entry must be an index line `- [[owner]] — hook` (fact lives on the page): - unsupported thread"
+      ]
+    }
+  ],
+  "comparisons": 72
+}

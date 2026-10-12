@@ -23,7 +23,7 @@ import sys
 
 import checkpoint_txn as txn
 from git_checked import GitIntegrityError, git_text, run_git
-import structural
+import memory_formats
 
 STATE = '.memory/STATE.md'
 INDEX = '.memory/wiki/index.md'
@@ -205,31 +205,7 @@ def check(root, package, *, active=False):
     sensitive = {p for p in txn._changed_paths(root) if p == STATE or p.startswith('.memory/wiki/')}
     if sensitive - seen:
         raise PackageError('memory changes missing from package: ' + ', '.join(sorted(sensitive - seen)))
-    errors = structural._check_state(outputs[STATE].decode('utf-8'),
-                                     routine=(root / '.memory/tracker.md').is_file())
-    headings = structural.toc(outputs[STATE].decode('utf-8'))
-    if len(headings) != len(set(headings)):
-        errors.append('STATE contains duplicate sections')
-    index = outputs[INDEX].decode('utf-8')
-    inventory = structural._decision_inventory(root / '.memory/wiki')
-    for relative in outputs:
-        if relative.startswith('.memory/wiki/decisions/'):
-            match = structural.DECISION_FILE.fullmatch(Path(relative).name)
-            if not match:
-                errors.append('invalid decision filename: ' + relative)
-            else:
-                did = match.group(1)
-                target_rel = relative.removeprefix('.memory/wiki/')
-                if did in inventory and inventory[did] != target_rel:
-                    errors.append('duplicate decision id: ' + did)
-                inventory[did] = target_rel
-    _, problems = structural.decision_index_records(index, inventory)
-    errors.extend(problems)
-    errors.extend('index summary exceeds 100 characters' for line_text in index.splitlines()
-                  if line_text.startswith('- ') and len(structural._prose_of(line_text)) > 100)
-    overview = outputs.get('.memory/wiki/overview.md')
-    if overview is not None:
-        errors.extend(structural._check_overview(overview.decode('utf-8')))
+    errors = memory_formats.check_candidate(root, outputs)
     if errors:
         raise PackageError('\n'.join(errors))
     return outputs, block, summary, session, line
