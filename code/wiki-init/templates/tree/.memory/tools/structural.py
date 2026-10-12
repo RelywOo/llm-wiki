@@ -2317,7 +2317,7 @@ def _demo():
         tools.mkdir(parents=True)
         (wiki / "concepts").mkdir(parents=True)
         (wiki / "decisions").mkdir()
-        for name in ("structural.py", "markdown_io.py", "git_checked.py",
+        for name in ("structural.py", "memory_formats.py", "markdown_io.py", "git_checked.py",
                      "wiki_validation.py", "pre_commit_guard.py"):
             shutil.copy2(script.parent / name, tools / name)
         (fixture / ".memory" / "STATE.md").write_text(
@@ -2761,7 +2761,7 @@ def resume():
         notice = prompt_notice(root)
         if notice:
             print(notice)
-    except (OSError, ValueError, KeyError, TypeError, GitCommandError):
+    except (ImportError, OSError, ValueError, KeyError, TypeError, GitCommandError):
         print("CHECKPOINT SUPERVISION: pending notices could not be read. "
               "Inspect checkpoint_watchdog.py health; silence is not proof of a saved checkpoint.")
     resume_pack()

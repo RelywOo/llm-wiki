@@ -98,7 +98,8 @@
         "focused_integration": "passed; absent watchdog creates no files, pending notice and degraded health visible in idle/active, corrupt inbox reported, notice bytes unchanged, pack-budget output identical",
         "final_regression": "pending"
       },
-      "limitation": "Native user-systemd delivery is not exercised by the synthetic notice test."
+      "limitation": "Native user-systemd delivery is not exercised by the synthetic notice test.",
+      "followup": "Missing watchdog import now reports a read warning and still loads memory; tested by the structural selfcheck minimal clone."
     },
     "S06": {
       "title": "Give procedural rules one primary document owner",
@@ -127,7 +128,8 @@
         "package_integration_tests": 3,
         "final_regression": "pending"
       },
-      "limitation": "The new module validates shape; it is not a semantic evidence checker or a replacement for any Git guard."
+      "limitation": "The new module validates shape; it is not a semantic evidence checker or a replacement for any Git guard.",
+      "followup": "Structural selfcheck minimal tool clone includes memory_formats; distribution checks passed after correcting that dependency copy."
     },
     "S08": {
       "title": "Parse the decision graph through one consistent implementation",
@@ -149,11 +151,32 @@
     },
     "S10": {
       "title": "Measure whether the legacy write-round heuristic is still useful",
-      "status": "proposed"
+      "status": "retained_after_measurement",
+      "decision": "Removal rejected: package-only detection is zero, but direct supported memory edits still receive useful round feedback; Prime detects actual changed paths through a different lifecycle",
+      "validation": {
+        "synthetic_protocol_cases": 5,
+        "package_apply_json_draft_task_capture_rounds": [
+          0,
+          0,
+          0
+        ],
+        "manual_wiki_edit_rounds": 1,
+        "manual_two_message_rounds": 2
+      },
+      "preserved": "Original fail-open helper, manual flow, consultation gate, Prime transaction/lock/rollback and changed-file counter",
+      "limitation": "Synthetic hook protocols show capability and gaps; no claim about real-world turn frequency or runtime speed."
     },
     "S11": {
       "title": "Share identical hook policies while preserving native adapters",
-      "status": "proposed"
+      "status": "retained_after_analysis",
+      "decision": "A new shared event catalog is rejected: all three adapters already call the same shared Python policies and shared command sources; their remaining registration/payload/lifecycle differences are real",
+      "evidence": {
+        "claude": "Edit/Write payload, sh shell, transcript message-based post-write counter",
+        "codex": "apply_patch plus exec payloads; commandWindows branch and per-entry hook trust",
+        "prime": "tool_call/tool_result lifecycle, filesystem-diff transaction validation, advisory mutation locks, turn/session reset and native prompt commands"
+      },
+      "preserved": "Three native adapters and their actual safeguards; no event bus, bridge subprocess or extra configuration introduced",
+      "validation": "Final all-runtime delivery, syntax and adapter selfchecks remain required."
     }
   },
   "preserved_priorities": "All five first-stage priorities and phase-two P1/P2; experimental P3/P4/P5 remain separate",
