@@ -60,7 +60,7 @@ LEGACY_LANGUAGE_SECTION = (
 
 TOOLING_PREFIXES = (".memory/tools/", ".memory/hooks/", ".claude/hooks/",
                     ".claude/commands/", ".github/")
-TOOLING_FILES = {".memory/.gitignore", ".memory/checkpoint-package.md", ".memory/checkpoint-inventory.md", ".memory/checkpoint-background.md"}
+TOOLING_FILES = {".memory/legacy-routine.md", ".memory/.gitignore", ".memory/checkpoint-package.md", ".memory/checkpoint-inventory.md", ".memory/checkpoint-background.md"}
 COMMIT_MSG = "chore: update wiki+STATE session memory tooling (/wiki-update)"
 PRIME_ADAPTER_REL = ".prime/agent/extensions/wiki-memory.js"
 PRIME_SETTINGS_REL = ".prime/agent/settings.json"
@@ -280,7 +280,12 @@ def main():
                  "run /wiki-init instead.")
     if (root / ".memory/runtimes.json").is_file():
         update_independent(root, args)
-        return
+    else:
+        _execute_update(root, args, _legacy_update_plan(root, args))
+
+
+def _legacy_update_plan(root: Path, args):
+    """Legacy ownership and placement adapter; no knowledge migration."""
     codex_installed = (root / ".codex" / "hooks.json").is_file()
     codex_active = codex_installed or args.codex
     prime_path = root / PRIME_ADAPTER_REL
@@ -311,91 +316,13 @@ def main():
                  "no '# STATE —' in STATE.md) — pass --project <name>.")
 
     targets = target_paths(root, codex_active, prime_active)
-    dirty = dirty_targets(root, targets)
-    if dirty:
-        ufail(3, "uncommitted changes on files this update would overwrite — "
-                 "commit or stash them first (uncommitted work is unrecoverable):"
-                 "\n  " + "\n  ".join(sorted(set(dirty))))
-
-    watchdog_action = watchdog_plan(root, args.watchdog, codex_active)
-
-    # writes — order matters: dual_sync must regenerate AFTER CLAUDE.md/commands
-    for rel in tooling_rels():
-        content = (TREE / rel).read_text(encoding="utf-8")
-        if rel.endswith(".md"):  # <project> lives only in md templates; code copies byte-exact
-            content = content.replace("<project>", project)
-        _write(root / rel, content)
-    settings_note = merge_settings(root)
-    retired_notes = remove_retired(root)
-    cm_notes = update_claude_md(root, project)
-    codex_notes = []
-    if codex_active:
-        hooks_p = root / ".codex" / "hooks.json"
-        before = hooks_p.read_bytes() if hooks_p.is_file() else None
-        install_codex(root, project)
-        run_dual_sync(root)
-        if before is None:
-            codex_notes.append("Codex layer RETROFITTED — open the repo in Codex "
-                               "once and accept the hook-trust prompt.")
-        elif hooks_p.read_bytes() != before:
-            codex_notes.append(".codex/hooks.json changed — re-accept the "
-                               "hook-trust prompt in Codex (per-entry hashes).")
-    prime_notes = []
-    if prime_active:
-        install_prime(root, project)
-        if not prime_installed:
-            prime_notes.append("Prime Agent layer RETROFITTED — open a fresh Prime session "
-                               "or run /reload to activate the adapter and /wiki-* commands.")
-
-    changed = dirty_targets(root, targets)
-    sha = None
-    if not changed:
-        print(f"wiki-update: {root} already up to date (project: {project})")
-    else:
-        r = _git(root, "add", "--", *sorted(set(changed)))
-        if r.returncode != 0:
-            ufail(5, f"git add failed:\n{r.stderr}")
-        if _git(root, "diff", "--cached", "--quiet").returncode == 0:
-            print("wiki-update: files written but NOTHING STAGED — are these "
-                  "paths gitignored? Review and commit manually.")
-        else:
-            r = _git(root, "commit", "-m", COMMIT_MSG)
-            if r.returncode != 0:
-                ufail(5, "git commit failed (files ARE updated — fix the cause, "
-                         f"then commit manually):\n{r.stderr}")
-            sha = _git(root, "rev-parse", "--short", "HEAD").stdout.strip()
-
-        print(f"wiki-update: updated {root} (project: {project}, "
-              f"codex: {'yes' if codex_active else 'no'}, "
-              f"prime: {'yes' if prime_active else 'no'})")
-        for rel in sorted(set(changed)):
-            print(f"  {rel} — {ROLES.get(rel, '')}")
-        if sha:
-            print(f"  commit: {sha}")
-
-    # The pre-write install pins the previous trusted HEAD so the update commit is guarded.
-    # Refresh once more after commit so doctor sees the new runtime closure, not a stale bundle.
-    precommit_note = install_precommit(root)
-
-    for note in ([settings_note and f".claude/settings.json — {settings_note}"]
-                 + retired_notes + cm_notes + [f".memory/hooks/pre-commit — "
-                 f"{precommit_note}"] + codex_notes + prime_notes + orphan_report(root)):
-        if note:
-            print(f"  note: {note}")
-
-    print("\ndoctor (contour self-check):")
-    r = subprocess.run([sys.executable, ".memory/tools/structural.py", "doctor", *(["--portable"] if args.portable else [])],
-                       cwd=root, capture_output=True, text=True)
-    out = (r.stdout + r.stderr).strip()
-    print("  " + "\n  ".join(out.splitlines()))
-    if r.returncode != 0:
-        ufail(4, "doctor FAILED — the contour is not alive; fix before relying "
-                 "on this project's memory system.")
-    deploy_watchdog(root, watchdog_action, codex_active)
+    return {"project": project, "runtimes": {"claude": True, "codex": codex_active, "prime": prime_active},
+            "previous": {"claude": True, "codex": codex_installed, "prime": prime_installed},
+            "sources": {rel: TREE / rel for rel in tooling_rels()}, "targets": targets, "independent": False}
 
 
-def update_independent(root: Path, args):
-    """Refresh independent installations without enabling unselected runtimes."""
+def _independent_update_plan(root: Path, args):
+    """Shared placement, explicit runtime selections and collision checks."""
     selection = root / ".memory/runtimes.json"
     cfg = json.loads(selection.read_text(encoding="utf-8"))
     if not isinstance(cfg, dict) or set(cfg) != {"claude", "codex", "prime"} or any(type(v) is not bool for v in cfg.values()):
@@ -433,15 +360,18 @@ def update_independent(root: Path, args):
         targets += ["AGENTS.md"] + [f".agents/skills/wiki-{name}/SKILL.md" for name in ("resume", "checkpoint", "clear")]
     if cfg["prime"]:
         targets += prime_rels() + [PRIME_SETTINGS_REL]
-    dirty = dirty_targets(root, targets)
-    if dirty:
-        ufail(3, "uncommitted changes on update targets:\n  " + "\n  ".join(dirty))
-    watchdog_action = watchdog_plan(root, args.watchdog, cfg["codex"])
-    for rel, source in sources.items():
-        content = source.read_text(encoding="utf-8")
-        if source.suffix == ".md":
-            content = content.replace("<project>", project).replace("`CLAUDE.md`", "`.memory/INSTRUCTIONS.md`")
-        _write(root / rel, content)
+    return {"project": project, "runtimes": cfg, "previous": previous,
+            "sources": sources, "targets": targets, "independent": True}
+
+
+def _update_instructions(root: Path, plan):
+    """Layout-specific instruction placement preserves all user-owned sections."""
+    project, cfg = plan["project"], plan["runtimes"]
+    selection = root / ".memory/runtimes.json"
+    if not plan["independent"]:
+        settings_note = merge_settings(root)
+        return ([settings_note and ".claude/settings.json — " + settings_note]
+                + remove_retired(root) + update_claude_md(root, project))
     instructions = root / ".memory/INSTRUCTIONS.md"
     lines = instructions.read_text(encoding="utf-8").splitlines(keepends=True)
     fragment = (FRAGS / "claude-md-memory.md").read_text(encoding="utf-8").replace("<project>", project)
@@ -455,35 +385,73 @@ def update_independent(root: Path, args):
     _write(selection, json.dumps(cfg, indent=2) + "\n")
     if cfg["claude"]:
         merge_settings(root)
+    return []
+
+
+def _execute_update(root: Path, args, plan):
+    """One preflight/write/sync/commit/pin/doctor/watchdog order for both layouts."""
+    project, cfg = plan["project"], plan["runtimes"]
+    dirty = dirty_targets(root, plan["targets"])
+    if dirty:
+        ufail(3, "uncommitted changes on update targets:\n  " + "\n  ".join(sorted(set(dirty))))
+    watchdog_action = watchdog_plan(root, args.watchdog, cfg["codex"])
+    for rel, source in plan["sources"].items():
+        content = source.read_text(encoding="utf-8")
+        if source.suffix == ".md":
+            content = content.replace("<project>", project)
+            if plan["independent"]:
+                content = content.replace("`CLAUDE.md`", "`.memory/INSTRUCTIONS.md`")
+        _write(root / rel, content)
+    notes = _update_instructions(root, plan)
+    hook_path = root / ".codex/hooks.json"
+    before = hook_path.read_bytes() if cfg["codex"] and hook_path.is_file() else None
     if cfg["codex"]:
         install_codex(root, project)
-    run_dual_sync(root)
+    if cfg["codex"] or plan["independent"]:
+        run_dual_sync(root)
     if cfg["prime"]:
         install_prime(root, project)
-    changed = dirty_targets(root, targets)
+    changed = sorted(set(dirty_targets(root, plan["targets"])))
     if changed:
-        r = _git(root, "add", "--", *sorted(set(changed)))
-        if r.returncode:
-            ufail(5, r.stderr)
-        r = _git(root, "commit", "-m", COMMIT_MSG)
-        if r.returncode:
-            ufail(5, r.stderr)
-        print("wiki-update: updated independent runtime installation")
-        for rel in sorted(set(changed)):
+        result = _git(root, "add", "--", *changed)
+        if result.returncode:
+            ufail(5, "git add failed:\n" + result.stderr)
+        if _git(root, "diff", "--cached", "--quiet").returncode == 0:
+            if plan["independent"]:
+                ufail(5, "git commit failed: no update files staged; inspect ignored paths")
+            print("wiki-update: files written but NOTHING STAGED — are these paths gitignored? Review and commit manually.")
+        else:
+            result = _git(root, "commit", "-m", COMMIT_MSG)
+            if result.returncode:
+                ufail(5, "git commit failed (files ARE updated — fix the cause, then commit manually):\n" + result.stderr)
+            print("  commit: " + _git(root, "rev-parse", "--short", "HEAD").stdout.strip())
+        print(f"wiki-update: updated {root} (project: {project}, "
+              f"codex: {'yes' if cfg['codex'] else 'no'}, "
+              f"prime: {'yes' if cfg['prime'] else 'no'})")
+        for rel in changed:
             print(f"  {rel}")
     else:
-        print("wiki-update: already up to date")
+        print(f"wiki-update: {root} already up to date (project: {project})")
+    # Precheck pinned the previous HEAD. Refresh only after the guarded update commit.
     print(install_precommit(root))
-    for note in orphan_report(root):
-        print("  note: " + note)
-    if ".codex/hooks.json" in changed:
+    for note in notes + orphan_report(root):
+        if note:
+            print("  note: " + note)
+    if cfg["codex"] and (before is None or hook_path.read_bytes() != before):
         print("Codex hook trust: open the repo in Codex and accept the hook-trust prompt.")
-    if cfg["prime"] and not previous["prime"]:
+    if cfg["prime"] and not plan["previous"]["prime"]:
         print("Prime Agent: open a fresh session or run /reload.")
-    result = subprocess.run([sys.executable, ".memory/tools/structural.py", "doctor", *(["--portable"] if args.portable else [])], cwd=root)
+    result = subprocess.run([sys.executable, ".memory/tools/structural.py", "doctor",
+                             *(["--portable"] if args.portable else [])], cwd=root)
     if result.returncode:
-        ufail(4, "doctor FAILED")
+        ufail(4, "doctor FAILED — fix the contour before relying on project memory")
     deploy_watchdog(root, watchdog_action, cfg["codex"])
+
+
+def update_independent(root: Path, args):
+    _execute_update(root, args, _independent_update_plan(root, args))
+
+
 
 
 # --- selfcheck -------------------------------------------------------------------

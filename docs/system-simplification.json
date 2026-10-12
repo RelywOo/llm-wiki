@@ -147,7 +147,21 @@
     },
     "S09": {
       "title": "Share update workflow across legacy and independent layouts",
-      "status": "proposed"
+      "status": "verified_in_work_branch",
+      "changed": "Two real layout preflight/placement plans feed one write/sync/guarded commit/pin/doctor/watchdog execution lifecycle; runtime selection and existing layout remain unchanged",
+      "preserved": "User knowledge and instructions, custom helpers/language, eight explicit runtime selections, four legacy runtime combinations, collisions/dirty/staged refusal, hook trust order and watchdog deployment state",
+      "validation": {
+        "old_new_update_pairs": 12,
+        "independent_combinations": 8,
+        "legacy_combinations": 4,
+        "output_files": "identical after normalizing temporary root paths",
+        "knowledge_custom_sections_and_helpers": "preserved",
+        "second_update": "no new commit in both arms",
+        "updater_selfcheck": "passed",
+        "focused_delivery_tests_passed": 4,
+        "stable_full_regression": "pending"
+      },
+      "limitation": "Native user-systemd and native Windows validation remain unavailable. A reporting regression (Prime status) was caught and repaired; original failure logs are retained."
     },
     "S10": {
       "title": "Measure whether the legacy write-round heuristic is still useful",
