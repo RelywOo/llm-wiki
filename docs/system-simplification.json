@@ -1,7 +1,7 @@
 {
   "base_main": "38829ec08e792ef20ae7179062a98c24a210ed63",
   "work_branch": "simplify/system-cleanup",
-  "scope": "Autonomous S04-S11 assessment and F01 repair in the work branch; no main integration or installed-project upgrade",
+  "scope": "All S01-S11 hypotheses assessed and F01 repaired in simplify/system-cleanup; no main integration or installed-project upgrade",
   "hypotheses": {
     "S01": {
       "title": "Keep only the accepted full-context Jev inventory path",
@@ -85,7 +85,7 @@
       "validation": {
         "focused_integration": "passed; generic PostgreSQL 3/5 STATE saved, tracker report absent without tracker, legacy routine retelling refused with tracker, tracker reads preserve bytes",
         "grep_nudge_selfcheck": "passed",
-        "final_regression": "pending"
+        "final_regression": "passed on immutable final code snapshot"
       },
       "limitation": "The historical routine score heuristic is retained for explicitly existing tracker projects; no tracker feature or data is removed."
     },
@@ -96,7 +96,7 @@
       "preserved": "Idle and active warnings, read-only inbox/registration, other-turn prompt notices, old-clone fallback, unchanged pack_size and resume_pack budget calculation",
       "validation": {
         "focused_integration": "passed; absent watchdog creates no files, pending notice and degraded health visible in idle/active, corrupt inbox reported, notice bytes unchanged, pack-budget output identical",
-        "final_regression": "pending"
+        "final_regression": "passed on immutable final code snapshot"
       },
       "limitation": "Native user-systemd delivery is not exercised by the synthetic notice test.",
       "followup": "Missing watchdog import now reports a read warning and still loads memory; tested by the structural selfcheck minimal clone."
@@ -112,7 +112,7 @@
         "baseline_saved": 2,
         "candidate_saved": 2,
         "critical_claim_review": "passed",
-        "final_regression": "pending"
+        "final_regression": "passed on immutable final code snapshot"
       },
       "limitation": "Two synthetic pairs do not establish model accuracy or speed superiority; repeated critical reminders and recon compatibility fields are retained."
     },
@@ -126,7 +126,7 @@
         "moved_functions_AST_identical": 10,
         "focused_format_tests": 2,
         "package_integration_tests": 3,
-        "final_regression": "pending"
+        "final_regression": "passed on immutable final code snapshot"
       },
       "limitation": "The new module validates shape; it is not a semantic evidence checker or a replacement for any Git guard.",
       "followup": "Structural selfcheck minimal tool clone includes memory_formats; distribution checks passed after correcting that dependency copy."
@@ -141,7 +141,7 @@
         "packet_comparisons": 120,
         "doctor_extract_search_results": "identical",
         "focused_decision_tests_passed": 8,
-        "final_regression": "pending"
+        "final_regression": "passed on immutable final code snapshot"
       },
       "limitation": "Warning-only views intentionally do not certify validity; the shared parser preserves that distinction. No semantic scope inference was added."
     },
@@ -159,7 +159,8 @@
         "second_update": "no new commit in both arms",
         "updater_selfcheck": "passed",
         "focused_delivery_tests_passed": 4,
-        "stable_full_regression": "pending"
+        "stable_full_regression": "passed",
+        "final_regression": "passed on immutable final code snapshot"
       },
       "limitation": "Native user-systemd and native Windows validation remain unavailable. A reporting regression (Prime status) was caught and repaired; original failure logs are retained."
     },
@@ -190,7 +191,7 @@
         "prime": "tool_call/tool_result lifecycle, filesystem-diff transaction validation, advisory mutation locks, turn/session reset and native prompt commands"
       },
       "preserved": "Three native adapters and their actual safeguards; no event bus, bridge subprocess or extra configuration introduced",
-      "validation": "Final all-runtime delivery, syntax and adapter selfchecks remain required."
+      "validation": "All eight runtime combinations passed; distribution native-adapter syntax/selfchecks passed; no native Windows/user-systemd claim."
     }
   },
   "preserved_priorities": "All five first-stage priorities and phase-two P1/P2; experimental P3/P4/P5 remain separate",
@@ -205,5 +206,42 @@
       "changed": "Selfcheck initializes its own synthetic STATE before its disposable baseline commit; production transaction behavior and caller knowledge are unchanged",
       "validation": "Public selfcheck succeeds for Open-only and 40-line STATE; caller bytes, HEAD and status remain unchanged"
     }
+  },
+  "final_validation": {
+    "status": "passed",
+    "suite_source": "Immutable snapshot byte-identical to committed production code",
+    "tests": 122,
+    "passed": 117,
+    "user_systemd_skipped": 5,
+    "failures": 0,
+    "errors": 0,
+    "all_runtime_combinations": 8,
+    "updater_selfcheck": "passed",
+    "distribution_check": "passed",
+    "old_new_updater_pairs": 12,
+    "decision_graph_cases": 24,
+    "decision_packet_comparisons": 120,
+    "format_candidate_comparisons": 72,
+    "S06_fresh_sessions": 4,
+    "S06_critical_claims": "preserved in two tested scenarios",
+    "protected_modules_byte_identical_to_main": [
+      "readonly_session.py",
+      "task_memory.py",
+      "evidence.py",
+      "wiki_validation.py",
+      "pre_commit_guard.py",
+      "wiki_guard.py",
+      "git_checked.py",
+      "consult_gate.py",
+      "Prime native adapter"
+    ],
+    "remaining_work": "None within this assessment; review and main integration are separate",
+    "limitations": [
+      "Native Windows/macOS were not run",
+      "Five user-systemd tests skipped",
+      "Prompt smoke pairs do not prove universal model accuracy or speed",
+      "Existing tracker projects retain their historical score heuristic",
+      "Raw initial failures and fixture corrections retained; full immutable-source rerun is green"
+    ]
   }
 }
