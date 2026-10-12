@@ -102,7 +102,18 @@
     },
     "S06": {
       "title": "Give procedural rules one primary document owner",
-      "status": "proposed"
+      "status": "verified_in_work_branch",
+      "changed": "Package guide owns metadata/operations/stale retry/recovery details; checkpoint command explicitly loads it and retains concise execution safeguards; rule-owner map recorded",
+      "preserved": "All semantic inventory/draft review/source/unknown/drop rules, critical inline reminders, complete post-compaction anchor and legacy recon fields",
+      "validation": {
+        "paired_fresh_sessions": 4,
+        "cases": 2,
+        "baseline_saved": 2,
+        "candidate_saved": 2,
+        "critical_claim_review": "passed",
+        "final_regression": "pending"
+      },
+      "limitation": "Two synthetic pairs do not establish model accuracy or speed superiority; repeated critical reminders and recon compatibility fields are retained."
     },
     "S07": {
       "title": "Provide a small interface for candidate shape validation",

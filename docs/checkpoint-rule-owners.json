@@ -1,0 +1,11 @@
+{
+  "primary_owners": {
+    "checkpoint_package_metadata_operations_freshness_retry": "code/wiki-init/templates/tree/.memory/checkpoint-package.md",
+    "inventory_retention_applicability_and_Jev_handoff": "code/wiki-init/templates/tree/.memory/checkpoint-inventory.md",
+    "checkpoint_order_target_reads_granularity_depth_provenance_unit_report": "code/wiki-init/templates/tree/.claude/commands/wiki-checkpoint.md",
+    "standing_memory_layers_immutability_sources_current_decisions_tasks_evidence": "code/wiki-init/templates/fragments/claude-md-memory.md",
+    "post_compaction_critical_rules": "code/wiki-init/templates/tree/.memory/tools/compact_anchor.py"
+  },
+  "loading": "Checkpoint step 3 explicitly reads the package guide before drafting or applying; standing instructions are supplied by the runtime and collector; configured Jev explicitly reads its guide",
+  "retained_repetition": "Short critical reminders and compact anchor remain self-contained. Recon fields and the legacy CLI remain compatible. No semantic source review, dropped-item accounting or authority rule was removed."
+}

@@ -71,13 +71,9 @@ Steps:
    `.memory/checkpoint-package.md` and run:
    `python .memory/tools/checkpoint_package.py init --name session-<N> --block "<block>" --summary "<summary>" --allow <paths...>`
    Use the authoritative session number and exact intended wiki/code/config/source paths.
-   STATE and index are included automatically; do not list or edit log.md. Choose a
-   nonempty single-line block and summary now: block spaces become hyphens, and the
-   generated log line must fit 200 characters. This validates metadata before writes.
-   The command prints a persistent JSON draft path in Git metadata. Read it and fill
-   its operations in one batch: write STATE/new files, edit existing pages, keep
-   already-written sources. One entry per file, combining that file's edits. Preserve
-   the captured baseline and hashes. Nothing protected is written at this stage.
+   Follow the guide's metadata, operation and freshness rules. STATE and index are
+   included automatically; the coordinator owns log.md. Read the printed persistent
+   JSON draft and fill its operations in one batch, preserving unaffected entries.
 
    SPLIT the work by those verdicts:
    - DURABLE (true in 3 sessions regardless of where I am — decisions, how-it-works,
@@ -147,15 +143,10 @@ Steps:
    freshness before writes, and checks again after BEGIN. It invokes the existing
    coordinator for compact, allowlisted private-index staging, structural guard,
    pinned pre-commit, log append and commit. Do not run a separate BEGIN or TAIL.
-   - Preflight failure writes no target files. Correct the offending package entry.
-   - Validation/hook/commit failure restores protected writes. The package survives:
-     correct the cause and reapply it, reusing all unaffected edits. Do not manually
-     salvage a log append or automatically retry the same failure.
-   - Changed HEAD/file hashes require reviewing a fresh baseline; never simply refresh
-     hashes to force the old edits through. An active transaction is a hard stop:
-     inspect `checkpoint_txn.py status`; use `recover` after an interruption before
-     retrying. A landed package cannot be applied twice.
-   - Never use `git add -A` or a shared-index checkpoint commit.
+   On refusal, stop and follow the already-read package guide's repair, rollback,
+   stale-baseline and interruption-recovery rules. Reuse the retained draft after
+   correcting the cause. Never bypass the coordinator with `git add -A`, manual log
+   writes or a shared-index checkpoint commit.
 
 7. Report — a short human digest in the session's selected conversation language,
    following the Language instructions, NO slugs/ids/wiki-jargon
