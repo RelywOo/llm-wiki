@@ -131,7 +131,17 @@
     },
     "S08": {
       "title": "Parse the decision graph through one consistent implementation",
-      "status": "proposed"
+      "status": "verified_in_work_branch",
+      "changed": "One snapshot parser owns supersession metadata, strict graph problems and diagnostic visibility; resolver and extract reuse parsed metadata and captured text",
+      "preserved": "Separate diagnostic warnings and authoritative refusal, full lineage, scoped interpretation instructions, historical labels, cycles/branches/duplicates/malformed handling, no persistent cache",
+      "validation": {
+        "differential_graphs": 24,
+        "packet_comparisons": 120,
+        "doctor_extract_search_results": "identical",
+        "focused_decision_tests_passed": 8,
+        "final_regression": "pending"
+      },
+      "limitation": "Warning-only views intentionally do not certify validity; the shared parser preserves that distinction. No semantic scope inference was added."
     },
     "S09": {
       "title": "Share update workflow across legacy and independent layouts",

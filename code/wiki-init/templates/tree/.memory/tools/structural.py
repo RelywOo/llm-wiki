@@ -188,56 +188,16 @@ def extract(wiki: Path = WIKI):
     """
     files = sorted(wiki.rglob("*.md"))
     slug_map = {_slug(f): f for f in files}  # slug -> path, directory-agnostic
-    by_id = {}
-    for f in files:
-        m = ID_PREFIX.match(f.stem)
-        if f.parent == wiki / "decisions" and m:
-            by_id.setdefault(m.group(1), []).append(f)
-    decisions = {did: paths[0] for did, paths in by_id.items()}
-
-    edges, warnings = [], []
-    candidates = {}  # new decision id -> old decision id
-    source_file = {}
-    for did, paths in sorted(by_id.items()):
-        if len(paths) > 1:
-            warnings.append(f"duplicate decision id {did}: "
-                            + ", ".join(p.name for p in paths))
-            continue
-        f = paths[0]
-        raw = read_markdown(f)
-        fm = FRONTMATTER.match(_norm_eol(raw))
-        if not fm:
-            continue  # doctor owns the hard schema error; no metadata executes
-        body = fm.group(1)
-        keys = SUPERSEDES_KEY.findall(body)
-        vals = SUPERSEDES.findall(body)
-        if not keys:
-            continue
-        if len(keys) != 1 or len(vals) != 1:
-            warnings.append(f"{f.name}: malformed/duplicate supersedes frontmatter")
-            continue
-        old = vals[0]
-        if old == did:
-            warnings.append(f"{f.name}: supersedes itself ({did})")
-            continue
-        if old not in decisions:
-            warnings.append(f"{f.name}: supersedes {old} -> no decision file")
-            continue
-        candidates[did] = old
-        source_file[did] = f
-
-    cycle_nodes = _supersession_cycle_nodes(candidates)
-    if cycle_nodes:
-        warnings.append("supersedes cycle: " + " -> ".join(sorted(cycle_nodes)))
-    superseded = set()
-    for new, old in candidates.items():
-        if new in cycle_nodes:
-            continue  # invalid graph metadata must never change computed truth
-        superseded.add(old)
-        edges.append((_slug(source_file[new]), "supersedes", _slug(decisions[old])))
+    texts = {f: read_markdown(f) for f in files}
+    parsed = _parse_decisions({f.name: texts[f] for f in files if f.parent == wiki / "decisions"})
+    decisions = {did: wiki / "decisions" / name for did, name in parsed["names"].items()}
+    edges, warnings = [], list(parsed["warnings"])
+    superseded = set(parsed["visible_parents"].values())
+    for new, old in parsed["visible_parents"].items():
+        edges.append((_slug(decisions[new]), "supersedes", _slug(decisions[old])))
 
     for f in files:
-        raw = read_markdown(f)
+        raw = texts[f]
         src = _slug(f)
         seen = set()
         for m in WIKILINK.findall(_strip_code(raw)):
@@ -273,21 +233,17 @@ def decision_packet(identifier: str, wiki: Path = WIKI) -> dict:
     Branches are ambiguous, never arbitrarily reduced to the largest/newest ID.
     """
     files = sorted((wiki / "decisions").glob("*.md"))
-    problems = _doctor_decisions({p.name: read_markdown(p) for p in files})
-    if problems:
-        raise ValueError("invalid decision graph: " + "; ".join(problems))
+    texts = {p.name: read_markdown(p) for p in files}
+    parsed = _parse_decisions(texts)
+    if parsed["problems"]:
+        raise ValueError("invalid decision graph: " + "; ".join(parsed["problems"]))
     by_id = {p.stem[:4]: p for p in files}
     did = Path(identifier).name.split("-", 1)[0].removesuffix(".md")
     if did not in by_id:
         raise ValueError(f"unknown decision: {identifier}")
-    parent, children = {}, {}
-    for key, path in by_id.items():
-        fm = FRONTMATTER.match(_norm_eol(read_markdown(path)))
-        found = SUPERSEDES.search(fm.group(1)) if fm else None
-        if found:
-            old = found.group(1)
-            parent[key] = old
-            children.setdefault(old, []).append(key)
+    parent, children = parsed["parents"], {}
+    for key, old in parent.items():
+        children.setdefault(old, []).append(key)
     first = did
     while first in parent:
         first = parent[first]
@@ -308,7 +264,7 @@ def decision_packet(identifier: str, wiki: Path = WIKI) -> dict:
                        "Do not treat historical values as current. If scope is unclear, report unknown.",
         "lineage": [{"id": key, "path": ".memory/wiki/" + by_id[key].relative_to(wiki).as_posix(),
                      "status": "current" if key == node else "superseded",
-                     "text": read_markdown(by_id[key])} for key in chain],
+                     "text": texts[by_id[key].name]} for key in chain],
     }
 
 
@@ -1065,8 +1021,19 @@ FM_DATE = re.compile(r"^date:\s*(\d{4}-\d{2}-\d{2})\s*$", re.M)
 PROJECT_DIR_REF = re.compile(r"\$CLAUDE_PROJECT_DIR/([^\"'\s]+)")
 
 
-def _doctor_decisions(pages: dict) -> list[str]:
-    """Strict decision frontmatter + supersession graph validation — PURE."""
+def _parse_decisions(pages: dict) -> dict:
+    """Parse one decision snapshot for strict certification and diagnostic visibility.
+
+    Problems block authoritative resolution. Diagnostic warnings preserve the older
+    read-only surface; malformed/cyclic metadata never becomes an executable edge.
+    No snapshot or resolved answer is cached across calls.
+    """
+    metadata = {}
+    for name, text in pages.items():
+        fm = FRONTMATTER.match(_norm_eol(text))
+        field_text = fm.group(1) if fm else None
+        metadata[name] = (field_text, SUPERSEDES_KEY.findall(field_text or ""),
+                          SUPERSEDES.findall(field_text or ""))
     probs, seen, graph = [], {}, {}
     for name, text in sorted(pages.items()):
         m = DECISION_FILE.match(name)
@@ -1074,11 +1041,11 @@ def _doctor_decisions(pages: dict) -> list[str]:
             probs.append(f"decisions/{name}: filename not NNNN-slug.md")
             continue
         fid = m.group(1)
-        fm = FRONTMATTER.match(_norm_eol(text))
-        if not fm:
+        field_text, keys, vals = metadata[name]
+        if field_text is None:
             probs.append(f"decisions/{name}: no frontmatter")
             continue
-        body = fm.group(1)
+        body = field_text
         got = FM_ID.search(body)
         if not got or got.group(1) != fid:
             probs.append(f"decisions/{name}: id {got.group(1) if got else '(none)'} "
@@ -1094,8 +1061,6 @@ def _doctor_decisions(pages: dict) -> list[str]:
                 date.fromisoformat(date_field.group(1))
             except ValueError:
                 probs.append(f"decisions/{name}: impossible calendar date {date_field.group(1)}")
-        keys = SUPERSEDES_KEY.findall(body)
-        vals = SUPERSEDES.findall(body)
         if keys:
             if len(keys) != 1 or len(vals) != 1:
                 probs.append(f"decisions/{name}: supersedes must be one exact `supersedes: NNNN` field")
@@ -1111,7 +1076,47 @@ def _doctor_decisions(pages: dict) -> list[str]:
                                         if n in seen and o in seen and n != o})
     if cycles:
         probs.append("decisions: supersedes cycle: " + " -> ".join(sorted(cycles)))
-    return probs
+    by_id = {}
+    for name in sorted(pages):
+        match = ID_PREFIX.match(Path(name).stem)
+        if match:
+            by_id.setdefault(match.group(1), []).append(name)
+    decisions = {did: names[0] for did, names in by_id.items()}
+    warnings = []
+    candidates = {}  # new decision id -> old decision id
+    for did, paths in sorted(by_id.items()):
+        if len(paths) > 1:
+            warnings.append(f"duplicate decision id {did}: "
+                            + ", ".join(paths))
+            continue
+        name = paths[0]
+        field_text, keys, vals = metadata[name]
+        if field_text is None:
+            continue  # doctor owns the hard schema error; no metadata executes
+        if not keys:
+            continue
+        if len(keys) != 1 or len(vals) != 1:
+            warnings.append(f"{name}: malformed/duplicate supersedes frontmatter")
+            continue
+        old = vals[0]
+        if old == did:
+            warnings.append(f"{name}: supersedes itself ({did})")
+            continue
+        if old not in decisions:
+            warnings.append(f"{name}: supersedes {old} -> no decision file")
+            continue
+        candidates[did] = old
+
+    cycle_nodes = _supersession_cycle_nodes(candidates)
+    if cycle_nodes:
+        warnings.append("supersedes cycle: " + " -> ".join(sorted(cycle_nodes)))
+    visible = {new: old for new, old in candidates.items() if new not in cycle_nodes}
+    return {"problems": probs, "parents": graph, "visible_parents": visible,
+            "warnings": warnings, "names": decisions}
+
+
+def _doctor_decisions(pages: dict) -> list[str]:
+    return _parse_decisions(pages)["problems"]
 
 
 def _probe_payload(event: str, matcher: str, root: Path, tool_name: str = "Bash") -> str:

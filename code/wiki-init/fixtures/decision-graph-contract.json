@@ -1,0 +1,1596 @@
+{
+  "baseline": "7d0e051",
+  "cases": [
+    {
+      "name": "empty",
+      "pages": {},
+      "expected": {
+        "problems": [],
+        "extract": [
+          [
+            [
+              "example",
+              "wants",
+              "future"
+            ]
+          ],
+          [
+            "example.md: broken [[0001-rule]]"
+          ],
+          [],
+          []
+        ],
+        "packets": {
+          "0001": {
+            "error": "unknown decision: 0001"
+          },
+          "0002": {
+            "error": "unknown decision: 0002"
+          },
+          "0003": {
+            "error": "unknown decision: 0003"
+          },
+          "0004": {
+            "error": "unknown decision: 0004"
+          },
+          "9999": {
+            "error": "unknown decision: 9999"
+          }
+        },
+        "search_labels": {}
+      }
+    },
+    {
+      "name": "single",
+      "pages": {
+        "0001-rule.md": "---\nid: 0001\ndate: 2026-10-12\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n"
+      },
+      "expected": {
+        "problems": [],
+        "extract": [
+          [
+            [
+              "example",
+              "references",
+              "0001-rule"
+            ],
+            [
+              "example",
+              "wants",
+              "future"
+            ]
+          ],
+          [],
+          [],
+          [
+            "0001"
+          ]
+        ],
+        "packets": {
+          "0001": {
+            "requested": "0001",
+            "current": "0001",
+            "status": "current",
+            "instruction": "Apply changes oldest to newest by scope. Preserve unchanged scopes. Do not treat historical values as current. If scope is unclear, report unknown.",
+            "lineage": [
+              {
+                "id": "0001",
+                "path": ".memory/wiki/decisions/0001-rule.md",
+                "status": "current",
+                "text": "---\nid: 0001\ndate: 2026-10-12\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n"
+              }
+            ]
+          },
+          "0002": {
+            "error": "unknown decision: 0002"
+          },
+          "0003": {
+            "error": "unknown decision: 0003"
+          },
+          "0004": {
+            "error": "unknown decision: 0004"
+          },
+          "9999": {
+            "error": "unknown decision: 9999"
+          }
+        },
+        "search_labels": {
+          "decisions/0001-rule.md": [
+            "active",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "unrelated",
+      "pages": {
+        "0001-rule.md": "---\nid: 0001\ndate: 2026-10-12\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n",
+        "0002-rule.md": "---\nid: 0002\ndate: 2026-10-12\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n"
+      },
+      "expected": {
+        "problems": [],
+        "extract": [
+          [
+            [
+              "example",
+              "references",
+              "0001-rule"
+            ],
+            [
+              "example",
+              "wants",
+              "future"
+            ]
+          ],
+          [],
+          [],
+          [
+            "0001",
+            "0002"
+          ]
+        ],
+        "packets": {
+          "0001": {
+            "requested": "0001",
+            "current": "0001",
+            "status": "current",
+            "instruction": "Apply changes oldest to newest by scope. Preserve unchanged scopes. Do not treat historical values as current. If scope is unclear, report unknown.",
+            "lineage": [
+              {
+                "id": "0001",
+                "path": ".memory/wiki/decisions/0001-rule.md",
+                "status": "current",
+                "text": "---\nid: 0001\ndate: 2026-10-12\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n"
+              }
+            ]
+          },
+          "0002": {
+            "requested": "0002",
+            "current": "0002",
+            "status": "current",
+            "instruction": "Apply changes oldest to newest by scope. Preserve unchanged scopes. Do not treat historical values as current. If scope is unclear, report unknown.",
+            "lineage": [
+              {
+                "id": "0002",
+                "path": ".memory/wiki/decisions/0002-rule.md",
+                "status": "current",
+                "text": "---\nid: 0002\ndate: 2026-10-12\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n"
+              }
+            ]
+          },
+          "0003": {
+            "error": "unknown decision: 0003"
+          },
+          "0004": {
+            "error": "unknown decision: 0004"
+          },
+          "9999": {
+            "error": "unknown decision: 9999"
+          }
+        },
+        "search_labels": {
+          "decisions/0001-rule.md": [
+            "active",
+            ""
+          ],
+          "decisions/0002-rule.md": [
+            "active",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "chain",
+      "pages": {
+        "0001-rule.md": "---\nid: 0001\ndate: 2026-10-12\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n",
+        "0002-rule.md": "---\nid: 0002\ndate: 2026-10-12\nsupersedes: 0001\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n",
+        "0003-rule.md": "---\nid: 0003\ndate: 2026-10-12\nsupersedes: 0002\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n",
+        "0004-rule.md": "---\nid: 0004\ndate: 2026-10-12\nsupersedes: 0003\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n"
+      },
+      "expected": {
+        "problems": [],
+        "extract": [
+          [
+            [
+              "0002-rule",
+              "supersedes",
+              "0001-rule"
+            ],
+            [
+              "0003-rule",
+              "supersedes",
+              "0002-rule"
+            ],
+            [
+              "0004-rule",
+              "supersedes",
+              "0003-rule"
+            ],
+            [
+              "example",
+              "references",
+              "0001-rule"
+            ],
+            [
+              "example",
+              "wants",
+              "future"
+            ]
+          ],
+          [],
+          [
+            "0001",
+            "0002",
+            "0003"
+          ],
+          [
+            "0004"
+          ]
+        ],
+        "packets": {
+          "0001": {
+            "requested": "0001",
+            "current": "0004",
+            "status": "superseded",
+            "instruction": "Apply changes oldest to newest by scope. Preserve unchanged scopes. Do not treat historical values as current. If scope is unclear, report unknown.",
+            "lineage": [
+              {
+                "id": "0001",
+                "path": ".memory/wiki/decisions/0001-rule.md",
+                "status": "superseded",
+                "text": "---\nid: 0001\ndate: 2026-10-12\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n"
+              },
+              {
+                "id": "0002",
+                "path": ".memory/wiki/decisions/0002-rule.md",
+                "status": "superseded",
+                "text": "---\nid: 0002\ndate: 2026-10-12\nsupersedes: 0001\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n"
+              },
+              {
+                "id": "0003",
+                "path": ".memory/wiki/decisions/0003-rule.md",
+                "status": "superseded",
+                "text": "---\nid: 0003\ndate: 2026-10-12\nsupersedes: 0002\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n"
+              },
+              {
+                "id": "0004",
+                "path": ".memory/wiki/decisions/0004-rule.md",
+                "status": "current",
+                "text": "---\nid: 0004\ndate: 2026-10-12\nsupersedes: 0003\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n"
+              }
+            ]
+          },
+          "0002": {
+            "requested": "0002",
+            "current": "0004",
+            "status": "superseded",
+            "instruction": "Apply changes oldest to newest by scope. Preserve unchanged scopes. Do not treat historical values as current. If scope is unclear, report unknown.",
+            "lineage": [
+              {
+                "id": "0001",
+                "path": ".memory/wiki/decisions/0001-rule.md",
+                "status": "superseded",
+                "text": "---\nid: 0001\ndate: 2026-10-12\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n"
+              },
+              {
+                "id": "0002",
+                "path": ".memory/wiki/decisions/0002-rule.md",
+                "status": "superseded",
+                "text": "---\nid: 0002\ndate: 2026-10-12\nsupersedes: 0001\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n"
+              },
+              {
+                "id": "0003",
+                "path": ".memory/wiki/decisions/0003-rule.md",
+                "status": "superseded",
+                "text": "---\nid: 0003\ndate: 2026-10-12\nsupersedes: 0002\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n"
+              },
+              {
+                "id": "0004",
+                "path": ".memory/wiki/decisions/0004-rule.md",
+                "status": "current",
+                "text": "---\nid: 0004\ndate: 2026-10-12\nsupersedes: 0003\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n"
+              }
+            ]
+          },
+          "0003": {
+            "requested": "0003",
+            "current": "0004",
+            "status": "superseded",
+            "instruction": "Apply changes oldest to newest by scope. Preserve unchanged scopes. Do not treat historical values as current. If scope is unclear, report unknown.",
+            "lineage": [
+              {
+                "id": "0001",
+                "path": ".memory/wiki/decisions/0001-rule.md",
+                "status": "superseded",
+                "text": "---\nid: 0001\ndate: 2026-10-12\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n"
+              },
+              {
+                "id": "0002",
+                "path": ".memory/wiki/decisions/0002-rule.md",
+                "status": "superseded",
+                "text": "---\nid: 0002\ndate: 2026-10-12\nsupersedes: 0001\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n"
+              },
+              {
+                "id": "0003",
+                "path": ".memory/wiki/decisions/0003-rule.md",
+                "status": "superseded",
+                "text": "---\nid: 0003\ndate: 2026-10-12\nsupersedes: 0002\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n"
+              },
+              {
+                "id": "0004",
+                "path": ".memory/wiki/decisions/0004-rule.md",
+                "status": "current",
+                "text": "---\nid: 0004\ndate: 2026-10-12\nsupersedes: 0003\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n"
+              }
+            ]
+          },
+          "0004": {
+            "requested": "0004",
+            "current": "0004",
+            "status": "current",
+            "instruction": "Apply changes oldest to newest by scope. Preserve unchanged scopes. Do not treat historical values as current. If scope is unclear, report unknown.",
+            "lineage": [
+              {
+                "id": "0001",
+                "path": ".memory/wiki/decisions/0001-rule.md",
+                "status": "superseded",
+                "text": "---\nid: 0001\ndate: 2026-10-12\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n"
+              },
+              {
+                "id": "0002",
+                "path": ".memory/wiki/decisions/0002-rule.md",
+                "status": "superseded",
+                "text": "---\nid: 0002\ndate: 2026-10-12\nsupersedes: 0001\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n"
+              },
+              {
+                "id": "0003",
+                "path": ".memory/wiki/decisions/0003-rule.md",
+                "status": "superseded",
+                "text": "---\nid: 0003\ndate: 2026-10-12\nsupersedes: 0002\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n"
+              },
+              {
+                "id": "0004",
+                "path": ".memory/wiki/decisions/0004-rule.md",
+                "status": "current",
+                "text": "---\nid: 0004\ndate: 2026-10-12\nsupersedes: 0003\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n"
+              }
+            ]
+          },
+          "9999": {
+            "error": "unknown decision: 9999"
+          }
+        },
+        "search_labels": {
+          "decisions/0001-rule.md": [
+            "superseded",
+            "0002-rule"
+          ],
+          "decisions/0002-rule.md": [
+            "superseded",
+            "0003-rule"
+          ],
+          "decisions/0003-rule.md": [
+            "superseded",
+            "0004-rule"
+          ],
+          "decisions/0004-rule.md": [
+            "active",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "branch",
+      "pages": {
+        "0001-rule.md": "---\nid: 0001\ndate: 2026-10-12\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n",
+        "0002-rule.md": "---\nid: 0002\ndate: 2026-10-12\nsupersedes: 0001\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n",
+        "0003-rule.md": "---\nid: 0003\ndate: 2026-10-12\nsupersedes: 0001\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n"
+      },
+      "expected": {
+        "problems": [],
+        "extract": [
+          [
+            [
+              "0002-rule",
+              "supersedes",
+              "0001-rule"
+            ],
+            [
+              "0003-rule",
+              "supersedes",
+              "0001-rule"
+            ],
+            [
+              "example",
+              "references",
+              "0001-rule"
+            ],
+            [
+              "example",
+              "wants",
+              "future"
+            ]
+          ],
+          [],
+          [
+            "0001"
+          ],
+          [
+            "0002",
+            "0003"
+          ]
+        ],
+        "packets": {
+          "0001": {
+            "error": "ambiguous successors of 0001: 0002, 0003; review scopes explicitly before applying a rule"
+          },
+          "0002": {
+            "error": "ambiguous successors of 0001: 0002, 0003; review scopes explicitly before applying a rule"
+          },
+          "0003": {
+            "error": "ambiguous successors of 0001: 0002, 0003; review scopes explicitly before applying a rule"
+          },
+          "0004": {
+            "error": "unknown decision: 0004"
+          },
+          "9999": {
+            "error": "unknown decision: 9999"
+          }
+        },
+        "search_labels": {
+          "decisions/0001-rule.md": [
+            "superseded",
+            "0002-rule, 0003-rule"
+          ],
+          "decisions/0002-rule.md": [
+            "active",
+            ""
+          ],
+          "decisions/0003-rule.md": [
+            "active",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "cycle",
+      "pages": {
+        "0001-rule.md": "---\nid: 0001\ndate: 2026-10-12\nsupersedes: 0002\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n",
+        "0002-rule.md": "---\nid: 0002\ndate: 2026-10-12\nsupersedes: 0001\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n"
+      },
+      "expected": {
+        "problems": [
+          "decisions: supersedes cycle: 0001 -> 0002"
+        ],
+        "extract": [
+          [
+            [
+              "example",
+              "references",
+              "0001-rule"
+            ],
+            [
+              "example",
+              "wants",
+              "future"
+            ]
+          ],
+          [
+            "supersedes cycle: 0001 -> 0002"
+          ],
+          [],
+          [
+            "0001",
+            "0002"
+          ]
+        ],
+        "packets": {
+          "0001": {
+            "error": "invalid decision graph: decisions: supersedes cycle: 0001 -> 0002"
+          },
+          "0002": {
+            "error": "invalid decision graph: decisions: supersedes cycle: 0001 -> 0002"
+          },
+          "0003": {
+            "error": "invalid decision graph: decisions: supersedes cycle: 0001 -> 0002"
+          },
+          "0004": {
+            "error": "invalid decision graph: decisions: supersedes cycle: 0001 -> 0002"
+          },
+          "9999": {
+            "error": "invalid decision graph: decisions: supersedes cycle: 0001 -> 0002"
+          }
+        },
+        "search_labels": {
+          "decisions/0001-rule.md": [
+            "active",
+            ""
+          ],
+          "decisions/0002-rule.md": [
+            "active",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "self",
+      "pages": {
+        "0001-rule.md": "---\nid: 0001\ndate: 2026-10-12\nsupersedes: 0001\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n"
+      },
+      "expected": {
+        "problems": [
+          "decisions/0001-rule.md: supersedes itself (0001)"
+        ],
+        "extract": [
+          [
+            [
+              "example",
+              "references",
+              "0001-rule"
+            ],
+            [
+              "example",
+              "wants",
+              "future"
+            ]
+          ],
+          [
+            "0001-rule.md: supersedes itself (0001)"
+          ],
+          [],
+          [
+            "0001"
+          ]
+        ],
+        "packets": {
+          "0001": {
+            "error": "invalid decision graph: decisions/0001-rule.md: supersedes itself (0001)"
+          },
+          "0002": {
+            "error": "invalid decision graph: decisions/0001-rule.md: supersedes itself (0001)"
+          },
+          "0003": {
+            "error": "invalid decision graph: decisions/0001-rule.md: supersedes itself (0001)"
+          },
+          "0004": {
+            "error": "invalid decision graph: decisions/0001-rule.md: supersedes itself (0001)"
+          },
+          "9999": {
+            "error": "invalid decision graph: decisions/0001-rule.md: supersedes itself (0001)"
+          }
+        },
+        "search_labels": {
+          "decisions/0001-rule.md": [
+            "active",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "missing",
+      "pages": {
+        "0001-rule.md": "---\nid: 0001\ndate: 2026-10-12\nsupersedes: 0009\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n"
+      },
+      "expected": {
+        "problems": [
+          "decisions/0001-rule.md: supersedes 0009 -> no decision file"
+        ],
+        "extract": [
+          [
+            [
+              "example",
+              "references",
+              "0001-rule"
+            ],
+            [
+              "example",
+              "wants",
+              "future"
+            ]
+          ],
+          [
+            "0001-rule.md: supersedes 0009 -> no decision file"
+          ],
+          [],
+          [
+            "0001"
+          ]
+        ],
+        "packets": {
+          "0001": {
+            "error": "invalid decision graph: decisions/0001-rule.md: supersedes 0009 -> no decision file"
+          },
+          "0002": {
+            "error": "invalid decision graph: decisions/0001-rule.md: supersedes 0009 -> no decision file"
+          },
+          "0003": {
+            "error": "invalid decision graph: decisions/0001-rule.md: supersedes 0009 -> no decision file"
+          },
+          "0004": {
+            "error": "invalid decision graph: decisions/0001-rule.md: supersedes 0009 -> no decision file"
+          },
+          "9999": {
+            "error": "invalid decision graph: decisions/0001-rule.md: supersedes 0009 -> no decision file"
+          }
+        },
+        "search_labels": {
+          "decisions/0001-rule.md": [
+            "active",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "duplicate_id",
+      "pages": {
+        "0001-a.md": "---\nid: 0001\ndate: 2026-10-12\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n",
+        "0001-b.md": "---\nid: 0001\ndate: 2026-10-12\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n"
+      },
+      "expected": {
+        "problems": [
+          "decisions/0001-b.md: duplicate id 0001 (also 0001-a.md)"
+        ],
+        "extract": [
+          [
+            [
+              "example",
+              "wants",
+              "future"
+            ]
+          ],
+          [
+            "duplicate decision id 0001: 0001-a.md, 0001-b.md",
+            "example.md: broken [[0001-rule]]"
+          ],
+          [],
+          [
+            "0001"
+          ]
+        ],
+        "packets": {
+          "0001": {
+            "error": "invalid decision graph: decisions/0001-b.md: duplicate id 0001 (also 0001-a.md)"
+          },
+          "0002": {
+            "error": "invalid decision graph: decisions/0001-b.md: duplicate id 0001 (also 0001-a.md)"
+          },
+          "0003": {
+            "error": "invalid decision graph: decisions/0001-b.md: duplicate id 0001 (also 0001-a.md)"
+          },
+          "0004": {
+            "error": "invalid decision graph: decisions/0001-b.md: duplicate id 0001 (also 0001-a.md)"
+          },
+          "9999": {
+            "error": "invalid decision graph: decisions/0001-b.md: duplicate id 0001 (also 0001-a.md)"
+          }
+        },
+        "search_labels": {
+          "decisions/0001-a.md": [
+            "active",
+            ""
+          ],
+          "decisions/0001-b.md": [
+            "active",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "date",
+      "pages": {
+        "0001-rule.md": "---\nid: 0001\ndate: 2026-02-30\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n"
+      },
+      "expected": {
+        "problems": [
+          "decisions/0001-rule.md: impossible calendar date 2026-02-30"
+        ],
+        "extract": [
+          [
+            [
+              "example",
+              "references",
+              "0001-rule"
+            ],
+            [
+              "example",
+              "wants",
+              "future"
+            ]
+          ],
+          [],
+          [],
+          [
+            "0001"
+          ]
+        ],
+        "packets": {
+          "0001": {
+            "error": "invalid decision graph: decisions/0001-rule.md: impossible calendar date 2026-02-30"
+          },
+          "0002": {
+            "error": "invalid decision graph: decisions/0001-rule.md: impossible calendar date 2026-02-30"
+          },
+          "0003": {
+            "error": "invalid decision graph: decisions/0001-rule.md: impossible calendar date 2026-02-30"
+          },
+          "0004": {
+            "error": "invalid decision graph: decisions/0001-rule.md: impossible calendar date 2026-02-30"
+          },
+          "9999": {
+            "error": "invalid decision graph: decisions/0001-rule.md: impossible calendar date 2026-02-30"
+          }
+        },
+        "search_labels": {
+          "decisions/0001-rule.md": [
+            "active",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "wrong_id",
+      "pages": {
+        "0001-rule.md": "---\nid: 0003\ndate: 2026-10-12\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n"
+      },
+      "expected": {
+        "problems": [
+          "decisions/0001-rule.md: id 0003 != filename prefix 0001"
+        ],
+        "extract": [
+          [
+            [
+              "example",
+              "references",
+              "0001-rule"
+            ],
+            [
+              "example",
+              "wants",
+              "future"
+            ]
+          ],
+          [],
+          [],
+          [
+            "0001"
+          ]
+        ],
+        "packets": {
+          "0001": {
+            "error": "invalid decision graph: decisions/0001-rule.md: id 0003 != filename prefix 0001"
+          },
+          "0002": {
+            "error": "invalid decision graph: decisions/0001-rule.md: id 0003 != filename prefix 0001"
+          },
+          "0003": {
+            "error": "invalid decision graph: decisions/0001-rule.md: id 0003 != filename prefix 0001"
+          },
+          "0004": {
+            "error": "invalid decision graph: decisions/0001-rule.md: id 0003 != filename prefix 0001"
+          },
+          "9999": {
+            "error": "invalid decision graph: decisions/0001-rule.md: id 0003 != filename prefix 0001"
+          }
+        },
+        "search_labels": {
+          "decisions/0001-rule.md": [
+            "active",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "no_fm",
+      "pages": {
+        "0001-rule.md": "# Rule\nsupersedes: 0002\n"
+      },
+      "expected": {
+        "problems": [
+          "decisions/0001-rule.md: no frontmatter"
+        ],
+        "extract": [
+          [
+            [
+              "example",
+              "references",
+              "0001-rule"
+            ],
+            [
+              "example",
+              "wants",
+              "future"
+            ]
+          ],
+          [],
+          [],
+          [
+            "0001"
+          ]
+        ],
+        "packets": {
+          "0001": {
+            "error": "invalid decision graph: decisions/0001-rule.md: no frontmatter"
+          },
+          "0002": {
+            "error": "invalid decision graph: decisions/0001-rule.md: no frontmatter"
+          },
+          "0003": {
+            "error": "invalid decision graph: decisions/0001-rule.md: no frontmatter"
+          },
+          "0004": {
+            "error": "invalid decision graph: decisions/0001-rule.md: no frontmatter"
+          },
+          "9999": {
+            "error": "invalid decision graph: decisions/0001-rule.md: no frontmatter"
+          }
+        },
+        "search_labels": {
+          "decisions/0001-rule.md": [
+            "active",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "bad_name",
+      "pages": {
+        "001-rule.md": "---\nid: 0001\ndate: 2026-10-12\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n"
+      },
+      "expected": {
+        "problems": [
+          "decisions/001-rule.md: filename not NNNN-slug.md"
+        ],
+        "extract": [
+          [
+            [
+              "example",
+              "wants",
+              "future"
+            ]
+          ],
+          [
+            "example.md: broken [[0001-rule]]"
+          ],
+          [],
+          [
+            "001"
+          ]
+        ],
+        "packets": {
+          "0001": {
+            "error": "invalid decision graph: decisions/001-rule.md: filename not NNNN-slug.md"
+          },
+          "0002": {
+            "error": "invalid decision graph: decisions/001-rule.md: filename not NNNN-slug.md"
+          },
+          "0003": {
+            "error": "invalid decision graph: decisions/001-rule.md: filename not NNNN-slug.md"
+          },
+          "0004": {
+            "error": "invalid decision graph: decisions/001-rule.md: filename not NNNN-slug.md"
+          },
+          "9999": {
+            "error": "invalid decision graph: decisions/001-rule.md: filename not NNNN-slug.md"
+          }
+        },
+        "search_labels": {
+          "decisions/001-rule.md": [
+            "active",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "body_inert",
+      "pages": {
+        "0001-rule.md": "---\nid: 0001\ndate: 2026-10-12\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n\n```\nsupersedes: 0002\n```\n"
+      },
+      "expected": {
+        "problems": [],
+        "extract": [
+          [
+            [
+              "example",
+              "references",
+              "0001-rule"
+            ],
+            [
+              "example",
+              "wants",
+              "future"
+            ]
+          ],
+          [],
+          [],
+          [
+            "0001"
+          ]
+        ],
+        "packets": {
+          "0001": {
+            "requested": "0001",
+            "current": "0001",
+            "status": "current",
+            "instruction": "Apply changes oldest to newest by scope. Preserve unchanged scopes. Do not treat historical values as current. If scope is unclear, report unknown.",
+            "lineage": [
+              {
+                "id": "0001",
+                "path": ".memory/wiki/decisions/0001-rule.md",
+                "status": "current",
+                "text": "---\nid: 0001\ndate: 2026-10-12\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n\n```\nsupersedes: 0002\n```\n"
+              }
+            ]
+          },
+          "0002": {
+            "error": "unknown decision: 0002"
+          },
+          "0003": {
+            "error": "unknown decision: 0003"
+          },
+          "0004": {
+            "error": "unknown decision: 0004"
+          },
+          "9999": {
+            "error": "unknown decision: 9999"
+          }
+        },
+        "search_labels": {
+          "decisions/0001-rule.md": [
+            "active",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "bom_like",
+      "pages": {
+        "0001-rule.md": " \n---\nid: 0001\ndate: 2026-10-12\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n"
+      },
+      "expected": {
+        "problems": [
+          "decisions/0001-rule.md: no frontmatter"
+        ],
+        "extract": [
+          [
+            [
+              "example",
+              "references",
+              "0001-rule"
+            ],
+            [
+              "example",
+              "wants",
+              "future"
+            ]
+          ],
+          [],
+          [],
+          [
+            "0001"
+          ]
+        ],
+        "packets": {
+          "0001": {
+            "error": "invalid decision graph: decisions/0001-rule.md: no frontmatter"
+          },
+          "0002": {
+            "error": "invalid decision graph: decisions/0001-rule.md: no frontmatter"
+          },
+          "0003": {
+            "error": "invalid decision graph: decisions/0001-rule.md: no frontmatter"
+          },
+          "0004": {
+            "error": "invalid decision graph: decisions/0001-rule.md: no frontmatter"
+          },
+          "9999": {
+            "error": "invalid decision graph: decisions/0001-rule.md: no frontmatter"
+          }
+        },
+        "search_labels": {
+          "decisions/0001-rule.md": [
+            "active",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "malformed0",
+      "pages": {
+        "0001-rule.md": "---\nid: 0001\ndate: 2026-10-12\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n",
+        "0002-rule.md": "---\nid: 0002\ndate: 2026-10-12\n supersedes: 0001\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n"
+      },
+      "expected": {
+        "problems": [
+          "decisions/0002-rule.md: supersedes must be one exact `supersedes: NNNN` field"
+        ],
+        "extract": [
+          [
+            [
+              "example",
+              "references",
+              "0001-rule"
+            ],
+            [
+              "example",
+              "wants",
+              "future"
+            ]
+          ],
+          [
+            "0002-rule.md: malformed/duplicate supersedes frontmatter"
+          ],
+          [],
+          [
+            "0001",
+            "0002"
+          ]
+        ],
+        "packets": {
+          "0001": {
+            "error": "invalid decision graph: decisions/0002-rule.md: supersedes must be one exact `supersedes: NNNN` field"
+          },
+          "0002": {
+            "error": "invalid decision graph: decisions/0002-rule.md: supersedes must be one exact `supersedes: NNNN` field"
+          },
+          "0003": {
+            "error": "invalid decision graph: decisions/0002-rule.md: supersedes must be one exact `supersedes: NNNN` field"
+          },
+          "0004": {
+            "error": "invalid decision graph: decisions/0002-rule.md: supersedes must be one exact `supersedes: NNNN` field"
+          },
+          "9999": {
+            "error": "invalid decision graph: decisions/0002-rule.md: supersedes must be one exact `supersedes: NNNN` field"
+          }
+        },
+        "search_labels": {
+          "decisions/0001-rule.md": [
+            "active",
+            ""
+          ],
+          "decisions/0002-rule.md": [
+            "active",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "malformed1",
+      "pages": {
+        "0001-rule.md": "---\nid: 0001\ndate: 2026-10-12\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n",
+        "0002-rule.md": "---\nid: 0002\ndate: 2026-10-12\n\tsupersedes: 0001\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n"
+      },
+      "expected": {
+        "problems": [
+          "decisions/0002-rule.md: supersedes must be one exact `supersedes: NNNN` field"
+        ],
+        "extract": [
+          [
+            [
+              "example",
+              "references",
+              "0001-rule"
+            ],
+            [
+              "example",
+              "wants",
+              "future"
+            ]
+          ],
+          [
+            "0002-rule.md: malformed/duplicate supersedes frontmatter"
+          ],
+          [],
+          [
+            "0001",
+            "0002"
+          ]
+        ],
+        "packets": {
+          "0001": {
+            "error": "invalid decision graph: decisions/0002-rule.md: supersedes must be one exact `supersedes: NNNN` field"
+          },
+          "0002": {
+            "error": "invalid decision graph: decisions/0002-rule.md: supersedes must be one exact `supersedes: NNNN` field"
+          },
+          "0003": {
+            "error": "invalid decision graph: decisions/0002-rule.md: supersedes must be one exact `supersedes: NNNN` field"
+          },
+          "0004": {
+            "error": "invalid decision graph: decisions/0002-rule.md: supersedes must be one exact `supersedes: NNNN` field"
+          },
+          "9999": {
+            "error": "invalid decision graph: decisions/0002-rule.md: supersedes must be one exact `supersedes: NNNN` field"
+          }
+        },
+        "search_labels": {
+          "decisions/0001-rule.md": [
+            "active",
+            ""
+          ],
+          "decisions/0002-rule.md": [
+            "active",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "malformed2",
+      "pages": {
+        "0001-rule.md": "---\nid: 0001\ndate: 2026-10-12\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n",
+        "0002-rule.md": "---\nid: 0002\ndate: 2026-10-12\n\"supersedes\": 0001\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n"
+      },
+      "expected": {
+        "problems": [
+          "decisions/0002-rule.md: supersedes must be one exact `supersedes: NNNN` field"
+        ],
+        "extract": [
+          [
+            [
+              "example",
+              "references",
+              "0001-rule"
+            ],
+            [
+              "example",
+              "wants",
+              "future"
+            ]
+          ],
+          [
+            "0002-rule.md: malformed/duplicate supersedes frontmatter"
+          ],
+          [],
+          [
+            "0001",
+            "0002"
+          ]
+        ],
+        "packets": {
+          "0001": {
+            "error": "invalid decision graph: decisions/0002-rule.md: supersedes must be one exact `supersedes: NNNN` field"
+          },
+          "0002": {
+            "error": "invalid decision graph: decisions/0002-rule.md: supersedes must be one exact `supersedes: NNNN` field"
+          },
+          "0003": {
+            "error": "invalid decision graph: decisions/0002-rule.md: supersedes must be one exact `supersedes: NNNN` field"
+          },
+          "0004": {
+            "error": "invalid decision graph: decisions/0002-rule.md: supersedes must be one exact `supersedes: NNNN` field"
+          },
+          "9999": {
+            "error": "invalid decision graph: decisions/0002-rule.md: supersedes must be one exact `supersedes: NNNN` field"
+          }
+        },
+        "search_labels": {
+          "decisions/0001-rule.md": [
+            "active",
+            ""
+          ],
+          "decisions/0002-rule.md": [
+            "active",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "malformed3",
+      "pages": {
+        "0001-rule.md": "---\nid: 0001\ndate: 2026-10-12\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n",
+        "0002-rule.md": "---\nid: 0002\ndate: 2026-10-12\nSupersedes: 0001\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n"
+      },
+      "expected": {
+        "problems": [
+          "decisions/0002-rule.md: supersedes must be one exact `supersedes: NNNN` field"
+        ],
+        "extract": [
+          [
+            [
+              "example",
+              "references",
+              "0001-rule"
+            ],
+            [
+              "example",
+              "wants",
+              "future"
+            ]
+          ],
+          [
+            "0002-rule.md: malformed/duplicate supersedes frontmatter"
+          ],
+          [],
+          [
+            "0001",
+            "0002"
+          ]
+        ],
+        "packets": {
+          "0001": {
+            "error": "invalid decision graph: decisions/0002-rule.md: supersedes must be one exact `supersedes: NNNN` field"
+          },
+          "0002": {
+            "error": "invalid decision graph: decisions/0002-rule.md: supersedes must be one exact `supersedes: NNNN` field"
+          },
+          "0003": {
+            "error": "invalid decision graph: decisions/0002-rule.md: supersedes must be one exact `supersedes: NNNN` field"
+          },
+          "0004": {
+            "error": "invalid decision graph: decisions/0002-rule.md: supersedes must be one exact `supersedes: NNNN` field"
+          },
+          "9999": {
+            "error": "invalid decision graph: decisions/0002-rule.md: supersedes must be one exact `supersedes: NNNN` field"
+          }
+        },
+        "search_labels": {
+          "decisions/0001-rule.md": [
+            "active",
+            ""
+          ],
+          "decisions/0002-rule.md": [
+            "active",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "malformed4",
+      "pages": {
+        "0001-rule.md": "---\nid: 0001\ndate: 2026-10-12\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n",
+        "0002-rule.md": "---\nid: 0002\ndate: 2026-10-12\nsupersedes:\n  0001\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n"
+      },
+      "expected": {
+        "problems": [
+          "decisions/0002-rule.md: supersedes must be one exact `supersedes: NNNN` field"
+        ],
+        "extract": [
+          [
+            [
+              "example",
+              "references",
+              "0001-rule"
+            ],
+            [
+              "example",
+              "wants",
+              "future"
+            ]
+          ],
+          [
+            "0002-rule.md: malformed/duplicate supersedes frontmatter"
+          ],
+          [],
+          [
+            "0001",
+            "0002"
+          ]
+        ],
+        "packets": {
+          "0001": {
+            "error": "invalid decision graph: decisions/0002-rule.md: supersedes must be one exact `supersedes: NNNN` field"
+          },
+          "0002": {
+            "error": "invalid decision graph: decisions/0002-rule.md: supersedes must be one exact `supersedes: NNNN` field"
+          },
+          "0003": {
+            "error": "invalid decision graph: decisions/0002-rule.md: supersedes must be one exact `supersedes: NNNN` field"
+          },
+          "0004": {
+            "error": "invalid decision graph: decisions/0002-rule.md: supersedes must be one exact `supersedes: NNNN` field"
+          },
+          "9999": {
+            "error": "invalid decision graph: decisions/0002-rule.md: supersedes must be one exact `supersedes: NNNN` field"
+          }
+        },
+        "search_labels": {
+          "decisions/0001-rule.md": [
+            "active",
+            ""
+          ],
+          "decisions/0002-rule.md": [
+            "active",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "malformed5",
+      "pages": {
+        "0001-rule.md": "---\nid: 0001\ndate: 2026-10-12\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n",
+        "0002-rule.md": "---\nid: 0002\ndate: 2026-10-12\nsupersedes: 0001\nsupersedes: 0001\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n"
+      },
+      "expected": {
+        "problems": [
+          "decisions/0002-rule.md: supersedes must be one exact `supersedes: NNNN` field"
+        ],
+        "extract": [
+          [
+            [
+              "example",
+              "references",
+              "0001-rule"
+            ],
+            [
+              "example",
+              "wants",
+              "future"
+            ]
+          ],
+          [
+            "0002-rule.md: malformed/duplicate supersedes frontmatter"
+          ],
+          [],
+          [
+            "0001",
+            "0002"
+          ]
+        ],
+        "packets": {
+          "0001": {
+            "error": "invalid decision graph: decisions/0002-rule.md: supersedes must be one exact `supersedes: NNNN` field"
+          },
+          "0002": {
+            "error": "invalid decision graph: decisions/0002-rule.md: supersedes must be one exact `supersedes: NNNN` field"
+          },
+          "0003": {
+            "error": "invalid decision graph: decisions/0002-rule.md: supersedes must be one exact `supersedes: NNNN` field"
+          },
+          "0004": {
+            "error": "invalid decision graph: decisions/0002-rule.md: supersedes must be one exact `supersedes: NNNN` field"
+          },
+          "9999": {
+            "error": "invalid decision graph: decisions/0002-rule.md: supersedes must be one exact `supersedes: NNNN` field"
+          }
+        },
+        "search_labels": {
+          "decisions/0001-rule.md": [
+            "active",
+            ""
+          ],
+          "decisions/0002-rule.md": [
+            "active",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "malformed6",
+      "pages": {
+        "0001-rule.md": "---\nid: 0001\ndate: 2026-10-12\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n",
+        "0002-rule.md": "---\nid: 0002\ndate: 2026-10-12\nsupersedes: 1\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n"
+      },
+      "expected": {
+        "problems": [
+          "decisions/0002-rule.md: supersedes must be one exact `supersedes: NNNN` field"
+        ],
+        "extract": [
+          [
+            [
+              "example",
+              "references",
+              "0001-rule"
+            ],
+            [
+              "example",
+              "wants",
+              "future"
+            ]
+          ],
+          [
+            "0002-rule.md: malformed/duplicate supersedes frontmatter"
+          ],
+          [],
+          [
+            "0001",
+            "0002"
+          ]
+        ],
+        "packets": {
+          "0001": {
+            "error": "invalid decision graph: decisions/0002-rule.md: supersedes must be one exact `supersedes: NNNN` field"
+          },
+          "0002": {
+            "error": "invalid decision graph: decisions/0002-rule.md: supersedes must be one exact `supersedes: NNNN` field"
+          },
+          "0003": {
+            "error": "invalid decision graph: decisions/0002-rule.md: supersedes must be one exact `supersedes: NNNN` field"
+          },
+          "0004": {
+            "error": "invalid decision graph: decisions/0002-rule.md: supersedes must be one exact `supersedes: NNNN` field"
+          },
+          "9999": {
+            "error": "invalid decision graph: decisions/0002-rule.md: supersedes must be one exact `supersedes: NNNN` field"
+          }
+        },
+        "search_labels": {
+          "decisions/0001-rule.md": [
+            "active",
+            ""
+          ],
+          "decisions/0002-rule.md": [
+            "active",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "malformed7",
+      "pages": {
+        "0001-rule.md": "---\nid: 0001\ndate: 2026-10-12\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n",
+        "0002-rule.md": "---\nid: 0002\ndate: 2026-10-12\nsupersedes: 0001 # comment\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n"
+      },
+      "expected": {
+        "problems": [
+          "decisions/0002-rule.md: supersedes must be one exact `supersedes: NNNN` field"
+        ],
+        "extract": [
+          [
+            [
+              "example",
+              "references",
+              "0001-rule"
+            ],
+            [
+              "example",
+              "wants",
+              "future"
+            ]
+          ],
+          [
+            "0002-rule.md: malformed/duplicate supersedes frontmatter"
+          ],
+          [],
+          [
+            "0001",
+            "0002"
+          ]
+        ],
+        "packets": {
+          "0001": {
+            "error": "invalid decision graph: decisions/0002-rule.md: supersedes must be one exact `supersedes: NNNN` field"
+          },
+          "0002": {
+            "error": "invalid decision graph: decisions/0002-rule.md: supersedes must be one exact `supersedes: NNNN` field"
+          },
+          "0003": {
+            "error": "invalid decision graph: decisions/0002-rule.md: supersedes must be one exact `supersedes: NNNN` field"
+          },
+          "0004": {
+            "error": "invalid decision graph: decisions/0002-rule.md: supersedes must be one exact `supersedes: NNNN` field"
+          },
+          "9999": {
+            "error": "invalid decision graph: decisions/0002-rule.md: supersedes must be one exact `supersedes: NNNN` field"
+          }
+        },
+        "search_labels": {
+          "decisions/0001-rule.md": [
+            "active",
+            ""
+          ],
+          "decisions/0002-rule.md": [
+            "active",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "malformed8",
+      "pages": {
+        "0001-rule.md": "---\nid: 0001\ndate: 2026-10-12\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n",
+        "0002-rule.md": "---\nid: 0002\ndate: 2026-10-12\nsupersedes: 0001\r\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n"
+      },
+      "expected": {
+        "problems": [],
+        "extract": [
+          [
+            [
+              "0002-rule",
+              "supersedes",
+              "0001-rule"
+            ],
+            [
+              "example",
+              "references",
+              "0001-rule"
+            ],
+            [
+              "example",
+              "wants",
+              "future"
+            ]
+          ],
+          [],
+          [
+            "0001"
+          ],
+          [
+            "0002"
+          ]
+        ],
+        "packets": {
+          "0001": {
+            "requested": "0001",
+            "current": "0002",
+            "status": "superseded",
+            "instruction": "Apply changes oldest to newest by scope. Preserve unchanged scopes. Do not treat historical values as current. If scope is unclear, report unknown.",
+            "lineage": [
+              {
+                "id": "0001",
+                "path": ".memory/wiki/decisions/0001-rule.md",
+                "status": "superseded",
+                "text": "---\nid: 0001\ndate: 2026-10-12\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n"
+              },
+              {
+                "id": "0002",
+                "path": ".memory/wiki/decisions/0002-rule.md",
+                "status": "current",
+                "text": "---\nid: 0002\ndate: 2026-10-12\nsupersedes: 0001\r\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n"
+              }
+            ]
+          },
+          "0002": {
+            "requested": "0002",
+            "current": "0002",
+            "status": "current",
+            "instruction": "Apply changes oldest to newest by scope. Preserve unchanged scopes. Do not treat historical values as current. If scope is unclear, report unknown.",
+            "lineage": [
+              {
+                "id": "0001",
+                "path": ".memory/wiki/decisions/0001-rule.md",
+                "status": "superseded",
+                "text": "---\nid: 0001\ndate: 2026-10-12\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n"
+              },
+              {
+                "id": "0002",
+                "path": ".memory/wiki/decisions/0002-rule.md",
+                "status": "current",
+                "text": "---\nid: 0002\ndate: 2026-10-12\nsupersedes: 0001\r\n---\n# Rule\n## Decision\nUnchanged scope plus a scoped update.\n"
+              }
+            ]
+          },
+          "0003": {
+            "error": "unknown decision: 0003"
+          },
+          "0004": {
+            "error": "unknown decision: 0004"
+          },
+          "9999": {
+            "error": "unknown decision: 9999"
+          }
+        },
+        "search_labels": {
+          "decisions/0001-rule.md": [
+            "superseded",
+            "0002-rule"
+          ],
+          "decisions/0002-rule.md": [
+            "active",
+            ""
+          ]
+        }
+      }
+    }
+  ]
+}

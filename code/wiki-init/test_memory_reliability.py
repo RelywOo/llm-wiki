@@ -38,6 +38,34 @@ class MemoryReliabilityTest(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         return result
 
+    def test_frozen_graph_packets_diagnostics_and_history_labels(self):
+        contract = json.loads((HERE/'fixtures/decision-graph-contract.json').read_text())
+        for case in contract['cases']:
+            with self.subTest(case=case['name']):
+                for path in (self.wiki/'decisions').glob('*.md'):
+                    path.unlink()
+                for name, text in case['pages'].items():
+                    self.write('.memory/wiki/decisions/'+name, text)
+                self.write('.memory/wiki/concepts/example.md',
+                           '# Example\n[[0001-rule]] [[?future]]\n```\nsupersedes: 0001\n```\n')
+                self.write('pages.json', json.dumps(case['pages']))
+                script = """import json, sys
+from pathlib import Path
+sys.path.insert(0, str(Path('.memory/tools').resolve()))
+import structural as s
+pages=json.loads(Path('pages.json').read_text())
+packets={}
+for identifier in ('0001','0002','0003','0004','9999'):
+    try: packets[identifier]=s.decision_packet(identifier)
+    except ValueError as e: packets[identifier]={'error':str(e)}
+print(json.dumps({'problems':s._doctor_decisions(pages),'extract':s.extract(),
+                 'packets':packets,'search_labels':s._decision_search_statuses(s.WIKI)}))
+"""
+                result = subprocess.run([sys.executable, '-c', script], cwd=self.root,
+                                        capture_output=True, text=True)
+                self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
+                self.assertEqual(json.loads(result.stdout), case['expected'])
+
     def test_old_section_identifies_current_successor(self):
         old = self.decision('0008', 'Server and offline: 512 KiB.')
         self.decision('0017', 'Server: 2048 KiB. Offline remains 512 KiB.', '0008')
